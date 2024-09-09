@@ -9,7 +9,7 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__) + "/..")
     
     # load splits, only train set is used to calculate normalizers
-    with open("./split_seed=2024.json", 'r') as f:
+    with open("./Data/split_seed=2024.json", 'r') as f:
         pids = json.load(f)['train']
 
     # load info
