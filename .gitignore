@@ -4,7 +4,14 @@ __pycache__/
 *$py.class
 
 # data files can't upload
-./Data/NpyData/*
+**/__pycache__
+Data/NpyData
+Data/cuda_normalizers
+Data/vahadane_images
+Checkpoints
+Results
+wandb
+Code/models/backbones/pretrained_weight
 
 # C extensions
 *.so

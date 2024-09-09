@@ -31,6 +31,7 @@ def norm_data(source_path, pid_result_root, ref_pid, cluster):
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__) + "/..")
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     
     # fixed seed
     random.seed(2024)
