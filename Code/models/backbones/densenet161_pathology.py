@@ -9,8 +9,7 @@ from torchvision.models.densenet import densenet161
 
 
 def get_densenet161(args):
-    pretrained_path = "/mnt/home/Guanjq/BackupWork/PathoCls/Code/models/backbones/DenseNet161_pathology/model.safetensors"
-    model = densenet161(pretrained=False)
+    pretrained_path = "/mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/models/backbones/pretrained_weight/DenseNet161_pathology/model.safetensors"
     pretrain = {}
     with safe_open(pretrained_path, framework="pt", device='cpu') as f:
         for k in f.keys():

@@ -1,10 +1,10 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
-    --runs_id "006_REC_vit_bench_32cluster" \
-    --gpu_id "0" \
+    --runs_id "007_REC_vit_bench_32cluster" \
+    --gpu_id "2" \
     --seed 109 \
     --weight_decay 6e-5 \
-    --learning_rate 5e-6 \
-    --backbone_lr 1e-6 \
+    --learning_rate 1e-6 \
+    --backbone_lr 5e-7 \
     --acc_step 4 \
     --batch_size 2 \
     --split_filename "split_seed=2024.json" \
