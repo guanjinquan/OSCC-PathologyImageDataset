@@ -1,5 +1,5 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
-    --runs_id "001_REC_vit_bench_32cluster" \
+    --runs_id "001_LNM_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,4 +12,4 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py
     --img_size 512 \
     --num_epochs 200 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['REC']" 
+    --use_tasks "['LNM']"

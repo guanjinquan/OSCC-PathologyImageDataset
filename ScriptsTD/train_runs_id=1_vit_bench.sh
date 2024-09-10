@@ -12,6 +12,4 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py
     --img_size 512 \
     --num_epochs 200 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['TD']" \
-    --augment_method 'vahadane' \
-    --stain_prob 0.5
+    --use_tasks "['TD']"

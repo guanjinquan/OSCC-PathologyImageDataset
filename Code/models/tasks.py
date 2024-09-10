@@ -54,10 +54,10 @@ class MultiTaskModel(nn.Module):
         self.backbone = backbone
         # support tasks
         self.support_tasks = \
-            ['TA', 'CE', 'TI', 'REC', 'PI', 'LNM']
+            ['TD', 'CE', 'TI', 'REC', 'PI', 'LNM']
         # tasks
         tasks = {
-            'TA': TumorDiffTask(in_feat, weights.get('TA', None)),             # 3分类
+            'TD': TumorDiffTask(in_feat, weights.get('TD', None)),             # 3分类
             'REC': RecTask(in_feat, weights.get('REC', None)),                   # 2分类
             'CE': CancerEmbolusTask(in_feat, weights.get('image_cls', None)),      # 2分类
             'TI': InvasionTask(in_feat, weights.get('TI', None)),                  # 2分类

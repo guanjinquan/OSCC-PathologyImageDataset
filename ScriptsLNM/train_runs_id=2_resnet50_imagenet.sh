@@ -1,5 +1,5 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
-    --runs_id "003_TI_resnet50_imagenet" \
+    --runs_id "002_LNM_resnet50_imagenet" \
     --gpu_id "2" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,6 +12,4 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py
     --img_size 512 \
     --num_epochs 200 \
     --model "resnet50_imagenet" \
-    --use_tasks "['TI']" \
-    --augment_method 'vahadane' \
-    --stain_prob 0.5
+    --use_tasks "['LNM']"
