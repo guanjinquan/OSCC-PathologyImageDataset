@@ -1,6 +1,6 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
     --runs_id "001_TD_vit_bench_32cluster" \
-    --gpu_id "1" \
+    --gpu_id "2" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
