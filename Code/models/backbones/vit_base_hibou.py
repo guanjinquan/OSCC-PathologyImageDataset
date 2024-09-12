@@ -1,4 +1,4 @@
-from transformers import AutoImageProcessor, AutoModel
+from transformers import AutoModel
 import torch.nn as nn
 import os
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
@@ -6,8 +6,7 @@ import torch
 import torch.nn.functional as F
 
 def get_hibou(args):
-    hibou_path = "/mnt/home/Guanjq/BackupWork/PathoCls/Code/models/backbones/pretrained_weight/hibou-b"
-    # processor = AutoImageProcessor.from_pretrained(hibou_path)
+    hibou_path = "./Code/models/backbones/pretrained_weight/hibou-b"
     model = AutoModel.from_pretrained(hibou_path)
     
     if 'p14' in args.model:
