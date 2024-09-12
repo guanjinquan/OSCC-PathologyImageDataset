@@ -40,7 +40,7 @@ class EncoderBlock(nn.Module):
 
 def get_vit(args):
     model = Unified_Model(now_2D_input_size=args.img_size)
-    checkpoint = torch.load("/mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/models/backbones/pretrained_weight/MedCoSS_modules/vit_base_p16_224_medcoss_epoch299.pth")
+    checkpoint = torch.load("./Code/models/backbones/pretrained_weight/medcoss-epoch299.pth")
     # 预训练有一些decoder权重没有用到，需要筛掉
     checkpoint = {k: v for k, v in checkpoint['model'].items() if k in model.state_dict().keys()}
     model.load_state_dict(checkpoint)
