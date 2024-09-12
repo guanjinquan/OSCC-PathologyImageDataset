@@ -1,4 +1,4 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Code/main_train.py \
     --runs_id "001_CE_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
