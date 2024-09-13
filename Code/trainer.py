@@ -38,6 +38,9 @@ class Trainer:
         self.best_metrics = {}
         self.best_score = 0
         self.acc_step = self.args.acc_step  # accumulate_step
+        self.loss_history = []
+        self.patience = self.args.num_epochs // 2
+        self.monitor_length = 50  # monitor the last 50 epochs
         
         # trainer config
         run_path = [self.args.model, self.args.runs_id, 'fold'+str(fold)][:2+int(fold>0)]
@@ -65,7 +68,11 @@ class Trainer:
             if self.test_loader is not None:
                 self.eval_epoch(self.test_loader, 'test')
             self.on_epoch_end()
-    
+            # early stopping
+            if epoch_id - start_epoch > self.patience and epoch_id > self.monitor_length:
+                if self.loss_history[-1] > np.mean(self.loss_history[-self.monitor_length:]):
+                    break
+                
     def train_epoch(self, train_loader):
         self.model.train()
         with tqdm.tqdm(total=len(train_loader)) as pbar:
@@ -112,6 +119,7 @@ class Trainer:
             wandb.log(loss_dict, step=self.epoch)
             wandb.log(metrics_dict, step=self.epoch)
             
+            self.loss_history.append(float(loss_dict['loss_total_train_sample']))
             self.log.write(f"train_with_sampler epoch_{self.epoch} : {loss_dict}")
             self.log.write(f'metrics : ' + str(metrics_dict))
             pbar.close()
