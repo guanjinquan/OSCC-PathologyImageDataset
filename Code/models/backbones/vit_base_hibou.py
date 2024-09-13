@@ -1,13 +1,26 @@
+# from models.backbones.Hibou_modules.modeling_dinov2 import Dinov2ModelWithRegisters
+# from models.backbones.Hibou_modules.configuration_dinov2 import Dinov2Config
 from transformers import AutoModel
 import torch.nn as nn
 import os
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 import torch
 import torch.nn.functional as F
+from safetensors import safe_open
+
 
 def get_hibou(args):
-    hibou_path = "./Code/models/backbones/pretrained_weight/hibou-b"
+    hibou_path = "./Code/models/backbones/pretrained_weight/hibou-b/"
     model = AutoModel.from_pretrained(hibou_path, trust_remote_code=True)
+    
+    # with open("./hibou_dinov2", "w") as f:
+    #     print(model, file=f)
+    
+    # tensors = {}
+    # with safe_open(hibou_path, framework="pt", device=0) as f:
+    #     for k in f.keys():
+    #         tensors[k.replace("embeddings.", "")] = f.get_tensor(k)
+    # model.load_state_dict(tensors)
     
     if 'p14' in args.model:
         patch_size = 14
