@@ -22,11 +22,11 @@ def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):
     test_set = GetDataset(0, "test", "ALL", mean_std, True, args)
     
     train_loader = DataLoader(train_set, batch_size=args.batch_size, 
-        sampler=BalancedBatchSampler(train_set), num_workers=8, pin_memory=True, collate_fn=collate_fn_ensemble)
+        sampler=BalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
     valid_loader = DataLoader(valid_set, batch_size=args.batch_size,
-        num_workers=8, pin_memory=True, collate_fn=collate_fn_ensemble)
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
     test_loader = DataLoader(test_set, batch_size=args.batch_size,
-        num_workers=8, pin_memory=True, collate_fn=collate_fn_ensemble)
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
 
     return train_loader, valid_loader, test_loader
 
@@ -37,9 +37,9 @@ def GetCVDataLoader(fold, mean_std=None, args=None, test_mode=False):
     valid_set = GetDataset(fold, "valid", "ALL", mean_std, True, args)
     
     train_loader = DataLoader(train_set, batch_size=args.batch_size, 
-        sampler=BalancedBatchSampler(train_set), num_workers=8, pin_memory=True, collate_fn=collate_fn_ensemble)
+        sampler=BalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
     valid_loader = DataLoader(valid_set, batch_size=args.batch_size,
-        num_workers=8, pin_memory=True, collate_fn=collate_fn_ensemble)
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
 
     return train_loader, valid_loader, None
 
