@@ -48,6 +48,11 @@ class Trainer:
         self.ckpt_path = os.path.join(self.args.ckpt_path, *run_path) 
         print("log_path : ", log_path, flush=True)
         print("ckpt_path : ", self.ckpt_path, flush=True)
+        
+        if os.path.exists(os.path.join(self.ckpt_path, 'Final_Trainer.pkl')):
+            print("Trainer already exists!!!", flush=True)
+            raise ValueError("Trainer already exists!!!")
+        
         os.makedirs(log_path, exist_ok=True)
         os.makedirs(self.ckpt_path, exist_ok=True)
         self.log = Logger(os.path.join(log_path, 'log.txt'))
