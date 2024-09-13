@@ -71,6 +71,9 @@ class Trainer:
             # early stopping
             if epoch_id - start_epoch > self.patience and epoch_id > self.monitor_length:
                 if self.loss_history[-1] > np.mean(self.loss_history[-self.monitor_length:]):
+                    print(f"Early stopping at epoch {epoch_id}!!!", flush=True)
+                    self.log.write(f"Early stopping at epoch {epoch_id}!!!")
+                    self.log.write("Loss History : " + str(self.loss_history[-self.monitor_length:]))
                     break
                 
     def train_epoch(self, train_loader):

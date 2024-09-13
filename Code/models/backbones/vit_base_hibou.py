@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 def get_hibou(args):
     hibou_path = "./Code/models/backbones/pretrained_weight/hibou-b"
-    model = AutoModel.from_pretrained(hibou_path)
+    model = AutoModel.from_pretrained(hibou_path, trust_remote_code=True)
     
     if 'p14' in args.model:
         patch_size = 14
@@ -31,13 +31,11 @@ class VitHibou(nn.Module):
         super(VitHibou, self).__init__()
         
         self.extractor, self.patch_size = get_hibou(args)
-
         self.neck = nn.Sequential(
             nn.Linear(768 * self.ensemble_num, 768),  # 0
             nn.LayerNorm(768), 
             nn.ReLU(),
         )
-
     
     def get_backbone_params(self):
         return list(self.extractor.parameters())
@@ -56,15 +54,3 @@ class VitHibou(nn.Module):
         x = torch.reshape(x, (-1, 768 * self.ensemble_num))
         feat = self.neck(x)
         return feat
-
-
-
-if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='hibou-b-p14')
-    args = parser.parse_args()
-    model = VitHibou(args).cuda()
-    input = torch.randn(6, 3, 512, 512).cuda()
-    print(model(input).shape)
