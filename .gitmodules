@@ -1,0 +1,6 @@
+[submodule "CONCH"]
+	path = CONCH
+	url = https://github.com/mahmoodlab/CONCH.git
+[submodule "ExternalLibs/ExternalLibs/CONCH"]
+	path = ExternalLibs/ExternalLibs/CONCH
+	url = https://github.com/mahmoodlab/CONCH.git
