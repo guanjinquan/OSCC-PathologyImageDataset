@@ -1,15 +1,8 @@
 from models.backbones.densenet121_imagenet import Densenet121Imagenet as densenet121_imagenet
-from models.backbones.densenet121_no_pre import Densenet121_no_pre as densenet121_no_pre
 from models.backbones.resnet_imagenet import ResNetImagenet as resnet_imagenet
-from models.backbones.resnet50_pathology import ResNetPathology as resnet50_pathology
-from models.backbones.resnext50_imagenet import ResNeXtImagenet as resnext50_imagenet
 from models.backbones.swin_imagenet import SwinImageNet as swin_imagenet
-from models.backbones.swin_no_pre import VanillaSwinV2 as swin_no_pre
-from models.backbones.vit_base_p32_imagenet import VitImagenet as vit_base_p32_imagenet
-from models.backbones.vit_base_p32_no_pre import VanillaViT as vit_base_p32_no_pre
-from models.backbones.vit_small_p16_imagenet import VitImagenet as vit_small_p16_imagenet
 from models.backbones.vit_small_p16_pathology import VitPathology as vit_small_p16_pathology
 from models.backbones.vit_base_p16_medcoss import ViTBaseMedCoSS as vit_base_p16_medcoss
-from models.backbones.densenet161_pathology import Densenet161Pathology as densenet161_pathology
 from models.backbones.vit_base_hibou import VitHibou as vit_base_hibou
-from models.backbones.vit_base_p16_imagenet import VitImagenet as vit_base_p16_imagenet
+from models.backbones.vit_base_p16_uni import VitUni as vit_base_p16_uni
+from models.backbones.vit_base_p16_conch import VitConch as vit_base_p16_conch
