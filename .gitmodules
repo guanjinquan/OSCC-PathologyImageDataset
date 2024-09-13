@@ -1,1 +1,4 @@
 
+[submodule "ExternalLibs/CONCH"]
+	path = ExternalLibs/CONCH
+	url = https://github.com/mahmoodlab/CONCH.git
