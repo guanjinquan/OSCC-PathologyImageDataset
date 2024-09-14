@@ -1,6 +1,6 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Code/main_train.py \
     --runs_id "005_TD_vit_base_p16_conch" \
-    --gpu_id "2" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
@@ -12,4 +12,5 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Code/main_train.py
     --img_size 512 \
     --num_epochs 400 \
     --model "vit_base_p16_conch" \
-    --use_tasks "['TD']"
+    --use_tasks "['TD']" \
+    --use_amp True

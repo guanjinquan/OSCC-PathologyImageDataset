@@ -18,8 +18,8 @@ if __name__ == '__main__':
     # 获取显卡显存大小
     memory_size = torch.cuda.get_device_properties(0).total_memory / 1024 / 1024 / 1024
     if memory_size < 20:  # < 20 GB
-        print("Memory size is less than 20GB, please check the memory size!!!", flush=True)
-        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8192"
+        print("Memory size is less than 20GB, set PYTORCH_CUDA_ALLOC_CONF = max_split_size_mb:128 !!!", flush=True)
+        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
     
     # 固定种子
     seed = int(args.seed)

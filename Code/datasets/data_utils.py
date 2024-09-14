@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/Guanjq/Work/MultiSitePathologyReccurence/Code")
 import torch
 
 def collate_fn_ensemble(input):  

@@ -12,4 +12,5 @@ python /home/Guanjq/Work/OSCC-PathologyImageDataset/Code/main_train.py \
     --img_size 512 \
     --num_epochs 400 \
     --model "vit_base_p16_hibou" \
-    --use_tasks "['REC']"
+    --use_tasks "['REC']" \
+    --use_amp True

@@ -13,15 +13,6 @@ def get_hibou(args):
     hibou_path = "./Code/models/backbones/pretrained_weight/hibou-b/"
     model = AutoModel.from_pretrained(hibou_path, trust_remote_code=True)
     
-    # with open("./hibou_dinov2", "w") as f:
-    #     print(model, file=f)
-    
-    # tensors = {}
-    # with safe_open(hibou_path, framework="pt", device=0) as f:
-    #     for k in f.keys():
-    #         tensors[k.replace("embeddings.", "")] = f.get_tensor(k)
-    # model.load_state_dict(tensors)
-    
     if 'p14' in args.model:
         patch_size = 14
     elif 'p16' in args.model:
