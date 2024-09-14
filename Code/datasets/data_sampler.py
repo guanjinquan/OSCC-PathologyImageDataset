@@ -1,6 +1,4 @@
-import sys
-sys.path.append("/home/Guanjq/Work/MultiSitePathologyReccurence/Code")
-from torch.utils.data import Dataset, sampler
+from torch.utils.data import sampler
 import random
 
 

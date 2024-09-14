@@ -44,6 +44,7 @@ def parse_arguments():
                         default='AdamW', help='choose optimizer')
     parser.add_argument('--scheduler', type=str, default='CosineAnnealingLR',
                         help='choose scheduler')
+    parser.add_argument('--use_amp', type=bool, default=False)
     
     
     args = parser.parse_args()

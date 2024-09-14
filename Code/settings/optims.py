@@ -23,6 +23,12 @@ def GetOptimizer(args, model):
             {'params': model.get_backbone_params(), 'lr': args.backbone_lr, 'weight_decay': args.weight_decay},
             {'params': model.get_others_params(), 'lr': args.learning_rate, 'weight_decay': args.weight_decay},
         ])
+    elif args.optimizer == 'SGD':
+        print("SGD optimizer")
+        return torch.optim.SGD([
+            {'params': model.get_backbone_params(), 'lr': args.backbone_lr, 'weight_decay': args.weight_decay},
+            {'params': model.get_others_params(), 'lr': args.learning_rate, 'weight_decay': args.weight_decay},
+        ], momentum=0.9)
     else:
         raise ValueError("optimizer not supported")
     

@@ -49,7 +49,7 @@ def GetHead(in_dim, out_dim):
     
 
 class MultiTaskModel(nn.Module):
-    def __init__(self, backbone, in_feat, args, weights={}) -> None:
+    def __init__(self, backbone, in_feat, args) -> None:
         super(MultiTaskModel, self).__init__()
         self.backbone = backbone
         # support tasks
@@ -57,12 +57,12 @@ class MultiTaskModel(nn.Module):
             ['TD', 'CE', 'TI', 'REC', 'PI', 'LNM']
         # tasks
         tasks = {
-            'TD': TumorDiffTask(in_feat, weights.get('TD', None)),             # 3分类
-            'REC': RecTask(in_feat, weights.get('REC', None)),                   # 2分类
-            'CE': CancerEmbolusTask(in_feat, weights.get('image_cls', None)),      # 2分类
-            'TI': InvasionTask(in_feat, weights.get('TI', None)),                  # 2分类
-            'PI': NerveInvasionTask(in_feat, weights.get('PI', None)), # 2分类
-            'LNM': LNMTask(in_feat, weights.get('LNM', None))
+            'TD': TumorDiffTask(in_feat),          
+            'REC': RecTask(in_feat),              
+            'CE': CancerEmbolusTask(in_feat),     
+            'TI': InvasionTask(in_feat),          
+            'PI': NerveInvasionTask(in_feat),    
+            'LNM': LNMTask(in_feat)
         }
         use_tasks = set(eval(args.use_tasks))
         print("Use tasks : ", use_tasks, flush=True)
@@ -109,12 +109,8 @@ class MultiTaskModel(nn.Module):
 
 
 class TumorDiffTask(nn.Module):
-    def __init__(self, in_feat, weight=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(TumorDiffTask, self).__init__()
-        self.loss_weight = None
-        if weight is not None:
-            self.loss_weight = torch.tensor(weight)
-            self.loss_weight.requires_grad = False
         self.head = GetHead(in_feat, 3)
     
     def loss(self, out, target):
@@ -123,7 +119,7 @@ class TumorDiffTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return F.cross_entropy(out, target, weight=self.loss_weight)
+        return F.cross_entropy(out, target)
 
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
@@ -148,10 +144,8 @@ class TumorDiffTask(nn.Module):
 
 
 class RecTask(nn.Module):
-    def __init__(self, in_feat, weights=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(RecTask, self).__init__()
-        if weights is not None:
-            print("Focal Loss doesn't need weights.", flush=True)
         self.head = GetHead(in_feat, 2)
     
     def loss(self, out, target):
@@ -180,12 +174,8 @@ class RecTask(nn.Module):
         
     
 class CancerEmbolusTask(nn.Module):
-    def __init__(self, in_feat, weight=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(CancerEmbolusTask, self).__init__()
-        self.loss_weight = None
-        if weight is not None:
-            self.loss_weight = torch.tensor(weight)
-            self.loss_weight.requires_grad = False
         self.head = GetHead(in_feat, 2)
     
     def loss(self, out, target):
@@ -194,7 +184,7 @@ class CancerEmbolusTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return F.cross_entropy(out, target, weight=self.loss_weight)
+        return FocalLoss()(out, target)
     
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
@@ -215,12 +205,8 @@ class CancerEmbolusTask(nn.Module):
 
 
 class InvasionTask(nn.Module):
-    def __init__(self, in_feat, weight=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(InvasionTask, self).__init__()
-        self.loss_weight = None
-        if weight is not None:
-            self.loss_weight = torch.tensor(weight)
-            self.loss_weight.requires_grad = False
         self.head = GetHead(in_feat, 2)
     
     def loss(self, out, target):
@@ -229,7 +215,7 @@ class InvasionTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return F.cross_entropy(out, target, weight=self.loss_weight)
+        return FocalLoss()(out, target)
     
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
@@ -250,12 +236,8 @@ class InvasionTask(nn.Module):
     
 
 class NerveInvasionTask(nn.Module):
-    def __init__(self, in_feat, weight=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(NerveInvasionTask, self).__init__()
-        self.loss_weight = None
-        if weight is not None:
-            self.loss_weight = torch.tensor(weight)
-            self.loss_weight.requires_grad = False
         self.head = GetHead(in_feat, 2)
     
     def loss(self, out, target):
@@ -264,7 +246,7 @@ class NerveInvasionTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return F.cross_entropy(out, target, weight=self.loss_weight)
+        return FocalLoss()(out, target)
     
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
@@ -285,12 +267,8 @@ class NerveInvasionTask(nn.Module):
     
 
 class LNMTask(nn.Module):
-    def __init__(self, in_feat, weight=None) -> None:
+    def __init__(self, in_feat) -> None:
         super(LNMTask, self).__init__()
-        self.loss_weight = None
-        if weight is not None:
-            self.loss_weight = torch.tensor(weight)
-            self.loss_weight.requires_grad = False
         self.head = GetHead(in_feat, 2)
     
     def loss(self, out, target):
@@ -299,7 +277,7 @@ class LNMTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return F.cross_entropy(out, target, weight=self.loss_weight)
+        return FocalLoss()(out, target)
     
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()

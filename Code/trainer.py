@@ -7,6 +7,8 @@ import tqdm
 import numpy as np
 import wandb
 import torch
+from torch.cuda.amp import GradScaler, autocast
+
 
 def get_score(metrics, key_task):
     score = 0.6 * metrics[f"AUC_{key_task}_valid"] + 0.1 * metrics[f"F1_{key_task}_valid"] + 0.3 * metrics[f"Acc_{key_task}_valid"]
@@ -41,6 +43,8 @@ class Trainer:
         self.loss_history = []
         self.patience = self.args.num_epochs // 2
         self.monitor_length = 50  # monitor the last 50 epochs
+        if self.args.use_amp:
+            self.scaler = GradScaler()
         
         # trainer config
         run_path = [self.args.model, self.args.runs_id, 'fold'+str(fold)][:2+int(fold>0)]
@@ -94,9 +98,15 @@ class Trainer:
                     y[k] = v.cuda()
                 p_idxs = p_idxs.cpu().data.numpy()
                 
-                out = self.model(x)
-
-                total_loss, losses = self.model.loss(out, y) 
+                if self.args.use_amp:
+                    with autocast():
+                        out = self.model(x)
+                        total_loss, losses = self.model.loss(out, y)
+                        total_loss = self.scaler.scale(total_loss)
+                else:
+                    out = self.model(x)
+                    total_loss, losses = self.model.loss(out, y) 
+                
                 for k, v in losses.items():
                     loss[k] = loss.get(k, []) + [v]
                 for k in y.keys():  # remove -1 On training set
@@ -111,8 +121,15 @@ class Trainer:
                 total_loss /= self.acc_step
                 total_loss.backward()
                 if i % self.acc_step == 0 or i == len(train_loader):  # i starts from 1
-                    self.optimizer.step()
-                    self.optimizer.zero_grad()
+                    if self.args.use_amp:
+                        self.scaler.step(self.optimizer)
+                        self.scaler.update()
+                        self.optimizer.zero_grad()
+                    else:
+                        self.optimizer.step()
+                        self.optimizer.zero_grad()
+                
+                del x, y, out, total_loss, losses
                 
                 pbar.update(1)
             
