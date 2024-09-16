@@ -11,7 +11,7 @@ Data/vahadane_images
 Checkpoints
 Results
 wandb
-Code/models/backbones/pretrained_weight
+Baseline/models/backbones/pretrained_weight
 
 # C extensions
 *.so
