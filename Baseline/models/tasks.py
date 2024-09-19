@@ -14,6 +14,14 @@ import torch.nn.functional as F
 # loss_weight : str
 # use_tasks : str 
 
+TASK_ID = {
+    'REC': 0,
+    'LNM': 1,
+    'TD': 2,
+    'TI': 3,
+    'CE': 4,
+    'PI': 5
+}
 
 def metrics(out, target):
     probs = torch.softmax(torch.tensor(out), dim=1).detach().numpy()
@@ -54,22 +62,22 @@ class MultiTaskModel(nn.Module):
         self.backbone = backbone
         # support tasks
         self.support_tasks = \
-            ['TD', 'CE', 'TI', 'REC', 'PI', 'LNM']
+            ['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']
         # tasks
         tasks = {
-            'TD': TumorDiffTask(in_feat),          
             'REC': RecTask(in_feat),              
-            'CE': CancerEmbolusTask(in_feat),     
+            'LNM': LNMTask(in_feat),
+            'TD': TumorDiffTask(in_feat),          
             'TI': InvasionTask(in_feat),          
+            'CE': CancerEmbolusTask(in_feat),     
             'PI': NerveInvasionTask(in_feat),    
-            'LNM': LNMTask(in_feat)
         }
-        use_tasks = set(eval(args.use_tasks))
+        use_tasks = list(eval(args.use_tasks))
         print("Use tasks : ", use_tasks, flush=True)
         for task_name in self.support_tasks:
             if task_name not in use_tasks:
                 tasks.pop(task_name)
-        self.task = nn.ModuleDict(tasks)
+        self.tasks = nn.ModuleDict(tasks)
         
         print("Params Size:", sum(p.numel() for p in self.parameters()), flush=True)
     
@@ -83,18 +91,17 @@ class MultiTaskModel(nn.Module):
     def loss(self, outputs, targets) -> Any:
         total_loss = 0
         loss = {}
-        for task_name, task in self.task.items():
+        for task_name, task in self.tasks.items():
             out = outputs[task_name]
             tar = targets[task_name]
             task_loss = task.loss(out, tar)
-            loss[task_name] = task_loss.item()
+            loss[task_name] = task_loss
             total_loss += task_loss
-        loss['total'] = total_loss.item()
         return total_loss, loss
 
     def metrics(self, outputs, targets) -> Any:
         metrics = {}
-        for task_name, task in self.task.items():
+        for task_name, task in self.tasks.items():
             out = outputs[task_name]
             tar = targets[task_name]
             metrics[task_name] = task.metrics(torch.tensor(out), np.array(tar))
@@ -103,7 +110,7 @@ class MultiTaskModel(nn.Module):
     def forward(self, *args, **kargs):
         feat_p = self.backbone(*args, **kargs)
         outs = {}
-        for task_name, task in self.task.items():
+        for task_name, task in self.tasks.items():
             outs[task_name] = task(feat_p)
         return outs
 

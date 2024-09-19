@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.config import parse_arguments
 import numpy as np
 import random
-from modules.trainer import Trainer
+from modules.gradnorm_trainer import GradNormTrainer
 import wandb
 
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     
     # 获取显卡显存大小
     memory_size = torch.cuda.get_device_properties(0).total_memory / 1024 / 1024 / 1024
-    if memory_size < 20 or args.use_ddp:  # < 20 GB or ddp to set max_split_size_mb:128
+    if memory_size < 20:  # < 20 GB
         print("Memory size is less than 20GB, set PYTORCH_CUDA_ALLOC_CONF = max_split_size_mb:128 !!!", flush=True)
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
     
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             },
             settings=wandb.Settings(_service_wait=300)
         )
-        trainer = Trainer(fold=0, args=args)
+        trainer = GradNormTrainer(fold=0, args=args)
         trainer.run()
         wandb.finish()
     else:
@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 },
                 settings=wandb.Settings(_service_wait=300)
             )
-            trainer = Trainer(fold=fold, args=args)
+            trainer = GradNormTrainer(fold=fold, args=args)
             trainer.run()
             wandb.finish()
 

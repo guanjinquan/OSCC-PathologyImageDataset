@@ -1,5 +1,5 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
-    --runs_id "006_REC_vit_bench_32cluster" \
+python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train_grad_norm.py \
+    --runs_id "001_GradNorm_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,4 +12,4 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test
     --img_size 512 \
     --num_epochs 200 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['REC']" 
+    --use_tasks "['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']"
