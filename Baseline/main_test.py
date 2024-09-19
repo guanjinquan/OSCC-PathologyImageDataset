@@ -36,8 +36,6 @@ class Tester:
     
     def run(self):
         ret = {}
-        if self.train_loader is not None:
-            ret['train'] = self.eval_epoch(self.train_loader, 'train')
         if self.val_loader is not None:
             ret['valid'] = self.eval_epoch(self.val_loader, 'valid')
         if self.test_loader is not None:

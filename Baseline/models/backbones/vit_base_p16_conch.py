@@ -1,5 +1,6 @@
 import sys
-sys.path.append("/home/Guanjq/Work/OSCC-PathologyImageDataset")
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', ".."))
 from ExternalLibs.CONCH.conch.open_clip_custom import create_model_from_pretrained
 import torch.nn as nn
 import torch

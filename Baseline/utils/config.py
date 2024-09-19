@@ -45,6 +45,7 @@ def parse_arguments():
     parser.add_argument('--scheduler', type=str, default='CosineAnnealingLR',
                         help='choose scheduler')
     parser.add_argument('--use_amp', type=bool, default=False)
+    parser.add_argument('--use_ddp', type=bool, default=False)
     
     
     args = parser.parse_args()

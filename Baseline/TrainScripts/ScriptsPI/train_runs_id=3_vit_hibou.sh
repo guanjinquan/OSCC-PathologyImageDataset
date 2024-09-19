@@ -1,6 +1,6 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "003_REC_vit_base_p16_hibou" \
-    --gpu_id "0" \
+python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
+    --runs_id "003_PI_vit_base_p16_hibou" \
+    --gpu_id "2" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
@@ -12,4 +12,4 @@ python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --img_size 512 \
     --num_epochs 400 \
     --model "vit_base_p16_hibou" \
-    --use_tasks "['REC']"
+    --use_tasks "['PI']"
