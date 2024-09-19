@@ -1,4 +1,4 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --runs_id "001_LNM_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
