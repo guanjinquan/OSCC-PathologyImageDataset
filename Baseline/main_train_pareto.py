@@ -32,36 +32,14 @@ if __name__ == '__main__':
     
     # start work
     if args.train_mode == "TVT":
-        wandb.init(
-            project="OSCC-PathoCls",
-            name=f"{args.model}-{args.runs_id}",
-            config={
-                'batch_size': args.batch_size * args.acc_step,
-                'num_epochs': args.num_epochs,
-                'learning_rate': args.learning_rate,
-                'backbone_lr': args.backbone_lr,
-                'weight_decay': args.weight_decay,
-                'backbones': args.model,
-                'use_task': args.use_tasks,
-                'optimizer': args.optimizer,
-                'scheduler': args.scheduler,
-                'seed': args.seed,
-                'data_augment_method': args.augment_method,
-                'stain_prob': args.stain_prob,
-            },
-            settings=wandb.Settings(_service_wait=300)
-        )
         trainer = ParetoTrainer(fold=0, args=args)
-        trainer.run()
-        wandb.finish()
-    else:
-        cv_list = eval(args.train_mode)
-        for fold in cv_list:
+        
+        if trainer.local_rank == 0:
             wandb.init(
                 project="OSCC-PathoCls",
-                name=f"{args.model}-{args.runs_id}-{fold}",
+                name=f"{args.model}-{args.runs_id}",
                 config={
-                    'batch_size': args.batch_size *  args.acc_step,
+                    'batch_size': args.batch_size * args.acc_step,
                     'num_epochs': args.num_epochs,
                     'learning_rate': args.learning_rate,
                     'backbone_lr': args.backbone_lr,
@@ -76,8 +54,40 @@ if __name__ == '__main__':
                 },
                 settings=wandb.Settings(_service_wait=300)
             )
-            trainer = ParetoTrainer(fold=fold, args=args)
-            trainer.run()
+            
+        trainer.run()
+        
+        if trainer.local_rank == 0:
             wandb.finish()
+    else:
+        cv_list = eval(args.train_mode)
+        for fold in cv_list:
+            trainer = ParetoTrainer(fold=fold, args=args)
+    
+            if trainer.local_rank == 0:
+                wandb.init(
+                    project="OSCC-PathoCls",
+                    name=f"{args.model}-{args.runs_id}-{fold}",
+                    config={
+                        'batch_size': args.batch_size *  args.acc_step,
+                        'num_epochs': args.num_epochs,
+                        'learning_rate': args.learning_rate,
+                        'backbone_lr': args.backbone_lr,
+                        'weight_decay': args.weight_decay,
+                        'backbones': args.model,
+                        'use_task': args.use_tasks,
+                        'optimizer': args.optimizer,
+                        'scheduler': args.scheduler,
+                        'seed': args.seed,
+                        'data_augment_method': args.augment_method,
+                        'stain_prob': args.stain_prob,
+                    },
+                    settings=wandb.Settings(_service_wait=300)
+                )
+            
+            trainer.run()
+            
+            if trainer.local_rank == 0:
+                wandb.finish()
 
     

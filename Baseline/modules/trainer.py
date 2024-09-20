@@ -32,7 +32,7 @@ class Trainer:
             self.model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(self.model).to(self.device)
             self.model = torch.nn.parallel.DistributedDataParallel(
                             self.model, device_ids=[self.local_rank], 
-                            output_device=self.local_rank)
+                            output_device=self.local_rank, static_graph=True)
             self.optimizer = GetOptimizer(self.args, self.model.module)
             self.scheduler  = GetScheduler(self.args, self.optimizer)
         else:
@@ -115,12 +115,12 @@ class Trainer:
                     for idx, groups in enumerate(self.optimizer.param_groups):
                         wandb.log({f"lr_{['backbones', 'head'][idx]}": groups['lr']}, step=self.epoch)
             # evaluation
-            # if self.local_rank == 0:
-                # if self.val_loader is not None:
-                #     self.eval_epoch(self.val_loader, 'valid')
-                # if self.test_loader is not None:
-                #     self.eval_epoch(self.test_loader, 'test')
-                # self.on_epoch_end()
+            if self.local_rank == 0:
+                if self.val_loader is not None:
+                    self.eval_epoch(self.val_loader, 'valid')
+                if self.test_loader is not None:
+                    self.eval_epoch(self.test_loader, 'test')
+                self.on_epoch_end()
             # early stopping
             if self.early_stop():
                 print(f"Early stopping at epoch {epoch_id}!!!", flush=True)
@@ -144,11 +144,11 @@ class Trainer:
                 if self.args.use_amp:
                     with autocast():
                         out = self.model(x)
-                        total_loss, losses = self.model.loss(out, y)
+                        total_loss, losses = self.LossFn(out, y)
                         total_loss = self.scaler.scale(total_loss)
                 else:
                     out = self.model(x)
-                    total_loss, losses = self.model.loss(out, y) 
+                    total_loss, losses = self.LossFn(out, y)
                 
                 loss['total'] = loss.get('total', []) + [total_loss.item()]
                 for k, v in losses.items():
@@ -174,24 +174,9 @@ class Trainer:
                         self.optimizer.zero_grad()
                 
                 del x, y, out, total_loss, losses
-                
                 pbar.update(1)
-            
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_train_sample"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_train_sample"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.loss_history.append(float(loss_dict['loss_total_train_sample']))
-            self.log.write(f"train_with_sampler epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
             pbar.close()
+            self.on_loader_exit('train', loss, outs, true)
     
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
@@ -206,8 +191,8 @@ class Trainer:
                 p_idxs = p_idxs.cpu().data.numpy()
                 
                 out = self.model(x)
+                total_loss, losses = self.LossFn(out, y)
                 
-                total_loss, losses = self.model.loss(out, y) 
                 loss['total'] = loss.get('total', []) + [total_loss.item()]
                 for k, v in losses.items():
                     loss[k] = loss.get(k, []) + [v.item()]
@@ -215,37 +200,8 @@ class Trainer:
                     outs[k] = outs.get(k, []) + v.detach().cpu().numpy().tolist()
                 for k, v in y.items():
                     true[k] = true.get(k, []) + v.detach().cpu().numpy().tolist()
-                
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_{mode}"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_{mode}"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.log.write(f"{mode} epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
-
-        # save best model of valid
-        if mode in ['valid']:
-            tasks = eval(self.args.use_tasks)
-            multi_task_score = 0
-            for task in tasks:
-                score = get_score(metrics_dict, task)
-                multi_task_score += score
-                if score > self.best_score and len(tasks) == 1:
-                    self.best_score = score
-                    self.best_metrics = metrics_dict
-                    save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'{mode}_{task}_Best.pth'))
-            if len(tasks) > 1 and multi_task_score > self.multi_task_best_score:
-                # if multi-task, save the total_best_score model
-                self.multi_task_best_score = multi_task_score
-                self.best_multi_task_metrics = metrics_dict
-                save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'{mode}_MultiTask_Best.pth'))     
+                    
+        self.on_loader_exit(mode, loss, outs, true) 
             
     def on_epoch_end(self):
         save_trainer(self, os.path.join(self.ckpt_path, 'Final_Trainer.pkl'))
@@ -260,4 +216,53 @@ class Trainer:
             self.log.write(f"Best Metrics : {self.best_metrics}")
         self.epoch += 1  
     
+    def save_best_model(self, metrics_dict):
+        if self.local_rank == 0:
+            tasks = eval(self.args.use_tasks)
+            multi_task_score = 0
+            for task in tasks:
+                score = get_score(metrics_dict, task)
+                multi_task_score += score
+                if len(tasks) == 1 and score > self.best_score:
+                    self.best_score = score
+                    self.best_metrics = metrics_dict
+                    save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'valid_{task}_Best.pth'))
+            if len(tasks) > 1 and multi_task_score > self.multi_task_best_score:
+                # if multi-task, save the total_best_score model
+                self.multi_task_best_score = multi_task_score
+                self.best_multi_task_metrics = metrics_dict
+                save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'valid_MultiTask_Best.pth'))       
+            
+    def on_loader_exit(self, mode, loss, outs, true):
+        loss_dict, metrics_dict = {}, {}
+        for k, v in loss.items():
+            loss_dict[f"loss_{k}_{mode}"] = np.mean(v)
+        all_metrics = self.Metrics(outs, true)
+        for k, metrics in all_metrics.items():
+            for m, a in metrics.items():
+                if m != 'confusion_matrix':
+                    metrics_dict[f"{m}_{k}_{mode}"] = a
         
+        if self.local_rank == 0:
+            if mode == 'train':
+                if f'loss_total_{mode}' in loss_dict:
+                    self.loss_history.append(float(loss_dict[f'loss_total_{mode}']))
+                elif f'loss_weighted_total_{mode}' in loss_dict:
+                    self.loss_history.append(float(loss_dict[f'loss_weighted_total_{mode}']))
+                else:
+                    raise ValueError("No loss_total or loss_weighted_total !!!")
+            # log to wandb and log.txt
+            wandb.log(loss_dict, step=self.epoch)
+            wandb.log(metrics_dict, step=self.epoch)
+            self.log.write(f"{mode} epoch_{self.epoch} : {loss_dict}")
+            self.log.write(f'metrics : ' + str(metrics_dict))
+            
+        # save best model of valid
+        if mode in ['valid']:
+            self.save_best_model(metrics_dict)   
+            
+    def LossFn(self, x, y):
+        return self.model.module.loss(x, y) if self.args.use_ddp else self.model.loss(x, y)
+    
+    def Metrics(self, x, y):
+        return self.model.module.metrics(x, y) if self.args.use_ddp else self.model.metrics(x, y)

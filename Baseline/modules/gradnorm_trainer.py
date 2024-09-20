@@ -83,13 +83,13 @@ class GradNormTrainer(Trainer):
                 if self.args.use_amp:
                     with autocast():
                         out = self.model(x)
-                        _, losses = self.model.loss(out, y)
+                        _, losses = self.LossFn(out, y)
                         tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                         weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
                         weighted_loss = self.scaler.scale(weighted_loss)
                 else:
                     out = self.model(x)
-                    _, losses = self.model.loss(out, y) 
+                    _, losses = self.LossFn(out, y)
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                     weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
                     
@@ -123,25 +123,10 @@ class GradNormTrainer(Trainer):
                         self.optimizer.zero_grad()
                 
                 del x, y, out, weighted_loss, losses
-                
                 pbar.update(1)
-            
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_train_sample"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_train_sample"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.loss_history.append(float(loss_dict['loss_weighted_total_train_sample']))
-            self.log.write(f"train_with_sampler epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
             pbar.close()
-    
+            self.on_loader_exit('train', loss, outs, true)
+                            
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
         with torch.no_grad():
@@ -155,7 +140,7 @@ class GradNormTrainer(Trainer):
                 p_idxs = p_idxs.cpu().data.numpy()
                 
                 out = self.model(x)
-                _, losses = self.model.loss(out, y) 
+                _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                 weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
                 
@@ -167,29 +152,4 @@ class GradNormTrainer(Trainer):
                 for k, v in y.items():
                     true[k] = true.get(k, []) + v.detach().cpu().numpy().tolist()
                 
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_{mode}"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_{mode}"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.log.write(f"{mode} epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
-
-        if mode in ['valid']:
-            tasks = eval(self.args.use_tasks)
-            multi_task_score = 0
-            for task in tasks:
-                score = get_score(metrics_dict, task)
-                multi_task_score += score
-            if len(tasks) > 1 and multi_task_score > self.multi_task_best_score:
-                # if multi-task, save the total_best_score model
-                self.multi_task_best_score = multi_task_score
-                self.best_multi_task_metrics = metrics_dict
-                save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'{mode}_MultiTask_Best.pth'))     
-            
+        self.on_loader_exit(mode, loss, outs, true)

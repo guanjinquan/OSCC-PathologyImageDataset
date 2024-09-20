@@ -84,7 +84,7 @@ class DistributedBalancedBatchSampler(sampler.Sampler):
                 self.dataset[label].append(random.choice(self.dataset[label]))
         
         self.keys = list(self.dataset.keys()) # list(range(class_nums))  
-        self.currentkey = 0
+        self.currentkey_idx = 0
         self.indices = self._init_indices()
 
     def _init_indices(self):
@@ -97,11 +97,11 @@ class DistributedBalancedBatchSampler(sampler.Sampler):
         self.build_sampler(seed=epoch+self.seed)
 
     def __iter__(self):# -> Generator[Any, Any, None]:
-        while self.indices[self.currentkey] < self.balanced_max - 1:
-            self.indices[self.currentkey] += 1
-            yield self.dataset[self.currentkey][self.indices[self.currentkey]]    # 每一次只返回一个下标
-            self.currentkey = (self.currentkey + 1) % self.class_nums
-        self.indices = [-1] * self.class_nums
+        while self.indices[self.keys[self.currentkey_idx]] < self.balanced_max - 1:
+            self.indices[self.keys[self.currentkey_idx]] += 1
+            yield self.dataset[self.keys[self.currentkey_idx]][self.indices[self.keys[self.currentkey_idx]]]    # 每一次只返回一个下标
+            self.currentkey_idx = (self.currentkey_idx + 1) % len(self.keys)
+        self.indices = self._init_indices()
 
     def __len__(self):
         # 返回平衡采样后的总样本数量
