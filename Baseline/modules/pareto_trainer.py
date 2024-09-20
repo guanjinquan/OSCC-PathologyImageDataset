@@ -16,39 +16,59 @@ class ParetoTrainer(Trainer):
         
         self.normalization_type = "loss+"
         self.grad_backup = {}  # gradients backup for accumulating
-        self.validation_scale = torch.tensor([1.0 for _ in self.model.tasks.keys()]).to(self.device)
+        self.tasks = list(self.model.module.tasks.keys()) if self.args.use_ddp else list(self.model.tasks.keys())
+        self.validation_scale = torch.tensor([1.0 for _ in self.tasks]).to(self.device)
 
     def calc_pareto_weights(self, x, y):
         # forward once to get the loss
         # backward six times to get the gradients
-        
         loss_data = {}
         scale = {}
         grads = {}
-        tasks = list(self.model.tasks.keys())
         
         out = self.model(x)
-        _, tasks_loss = self.model.loss(out, y)
+        _, tasks_loss = self.LossFn(out, y)
        
-        for t in tasks:
-            print("Working on task: ", t, flush=True)
+        for t in self.tasks:
             self.model.zero_grad()
             loss_data[t] = tasks_loss[t].item()
-            tasks_loss[t].backward(retain_graph=True)
+            tasks_loss[t].backward(retain_graph=True)  # can't use ddp in pareto because of redudant grads
+            
+            """
+            Traceback (most recent call last):                                                                                                                                                                                               
+            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_pareto.py", line 58, in <module>                                                                                                                        
+                trainer.run()                                                                                                                                                                                                                
+            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/trainer.py", line 112, in run                                                                                                                              
+                self.train_epoch(self.train_loader)                                                                                                                                                                                          
+            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/pareto_trainer.py", line 81, in train_epoch                                                                                                                
+                scale = self.calc_pareto_weights(x, y).to(self.device)                                                                                                                                                                       
+            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/pareto_trainer.py", line 35, in calc_pareto_weights
+                tasks_loss[t].backward(retain_graph=True)
+            File "/home/Guanjq/miniconda3/envs/resnet_demo/lib/python3.7/site-packages/torch/_tensor.py", line 488, in backward
+                self, gradient, retain_graph, create_graph, inputs=inputs
+            File "/home/Guanjq/miniconda3/envs/resnet_demo/lib/python3.7/site-packages/torch/autograd/__init__.py", line 199, in backward
+                allow_unreachable=True, accumulate_grad=True)  # Calls into the C++ engine to run the backward pass
+            RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters are not shared ac
+            ross multiple concurrent forward-backward passes. or try to use _set_static_graph() as a workaround if this module graph does not change during training loop.2) Reused parameters in multiple reentrant backward passes. For exa
+            mple, if you use multiple `checkpoint` functions to wrap the same part of your model, it would result in the same set of parameters been used by different reentrant backward passes multiple times, and hence marking a variable
+            ready multiple times. DDP does not support such use cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not change over iterations.
+            Parameter at index 152 has been marked as ready twice. This means that multiple autograd engine  hooks have fired for this particular parameter during this iteration. You can set the environment variable TORCH_DISTRIBUTED_DEB
+            UG to either INFO or DETAIL to print parameter names for further debugging.
+            """
             
             grads[t] = []
-            for name, param in self.model.backbone.named_parameters():
+            key_params = self.model.module.backbone if self.args.use_ddp else self.model.backbone
+            for name, param in key_params.named_parameters():
                 if param.grad is not None:
                     grads[t].append(torch.autograd.Variable(param.grad.data.clone(), requires_grad=False))
 
         gn = gradient_normalizers(grads, loss_data, self.normalization_type)
-        for t in tasks:
+        for t in self.tasks:
             for gr_i in range(len(grads[t])):
-                grads[t][gr_i] = grads[t][gr_i] / gn[t] # type: tensor
+                grads[t][gr_i] = grads[t][gr_i] / gn[t]
 
-        print("Calculating scales", flush=True)
         # Frank-Wolfe iteration to compute scales.
-        sol, min_norm = MinNormSolver.find_min_norm_element([grads[t] for t in tasks])
+        sol, min_norm = MinNormSolver.find_min_norm_element([grads[t] for t in self.tasks])
         for i, t in enumerate(self.model.tasks.keys()):
             scale[t] = float(sol[i])
         
@@ -88,13 +108,13 @@ class ParetoTrainer(Trainer):
                 if self.args.use_amp:
                     with autocast():
                         out = self.model(x)
-                        _, losses = self.model.loss(out, y)
+                        _, losses = self.LossFn(out, y)
                         tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                         weighted_loss = torch.sum(scale * tasks_loss)
                         weighted_loss = self.scaler.scale(weighted_loss)
                 else:
                     out = self.model(x)
-                    _, losses = self.model.loss(out, y) 
+                    _, losses = self.LossFn(out, y)
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                     weighted_loss = torch.sum(scale * tasks_loss)
                     
@@ -124,25 +144,10 @@ class ParetoTrainer(Trainer):
                         self.optimizer.step()
                         self.optimizer.zero_grad()
                 
-                del x, y, out, weighted_loss, losses
-                
+                del x, y, weighted_loss, losses
                 pbar.update(1)
-            
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_train_sample"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_train_sample"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.loss_history.append(float(loss_dict['loss_weighted_total_train_sample']))
-            self.log.write(f"train_with_sampler epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
             pbar.close()
+            self.on_loader_exit('train', loss, outs, true)
     
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
@@ -157,7 +162,7 @@ class ParetoTrainer(Trainer):
                 p_idxs = p_idxs.cpu().data.numpy()
                 
                 out = self.model(x)
-                _, losses = self.model.loss(out, y) 
+                _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                 
                 if self.epoch > 0:
@@ -174,29 +179,5 @@ class ParetoTrainer(Trainer):
                 for k, v in y.items():
                     true[k] = true.get(k, []) + v.detach().cpu().numpy().tolist()
                 
-            loss_dict, metrics_dict = {}, {}
-            for k, v in loss.items():
-                loss_dict[f"loss_{k}_{mode}"] = np.mean(v)
-            all_metrics = self.model.metrics(outs, true)
-            for k, metrics in all_metrics.items():
-                for m, a in metrics.items():
-                    if m != 'confusion_matrix':
-                        metrics_dict[f"{m}_{k}_{mode}"] = a
-            wandb.log(loss_dict, step=self.epoch)
-            wandb.log(metrics_dict, step=self.epoch)
-            
-            self.log.write(f"{mode} epoch_{self.epoch} : {loss_dict}")
-            self.log.write(f'metrics : ' + str(metrics_dict))
-
-        if mode in ['valid']:
-            tasks = eval(self.args.use_tasks)
-            multi_task_score = 0
-            for task in tasks:
-                score = get_score(metrics_dict, task)
-                multi_task_score += score
-            if len(tasks) > 1 and multi_task_score > self.multi_task_best_score:
-                # if multi-task, save the total_best_score model
-                self.multi_task_best_score = multi_task_score
-                self.best_multi_task_metrics = metrics_dict
-                save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'{mode}_MultiTask_Best.pth'))     
-            
+                del x, y, out, weighted_loss, losses
+            self.on_loader_exit(mode, loss, outs, true)

@@ -1,6 +1,7 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_pareto.py \
-    --runs_id "002_Pareto_vit_bench_32cluster" \
-    --gpu_id "1" \
+# tmux - 1
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+    --runs_id "003_SUM_vit_bench_32cluster" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
