@@ -44,19 +44,17 @@ def vit_small(args, pretrained, progress, key):
     return model
 
 class VitPathology(nn.Module):
-    ensemble_num = 6
-    
+
     def __init__(self, args):
         super(VitPathology, self).__init__()
         
         self.extractor = vit_small(args, pretrained=True, progress=True, key="DINO_p16")
-
+        self.ensemble_num = 6 if args.data_type == "ALL" else 3
         self.neck = nn.Sequential(
             nn.Linear(384 * self.ensemble_num, 768),  # 0
             nn.LayerNorm(768), 
             nn.ReLU(),
         )
-
     
     def get_backbone_params(self):
         return list(self.extractor.parameters())
@@ -71,8 +69,3 @@ class VitPathology(nn.Module):
         x = torch.reshape(x, (-1, 384 * self.ensemble_num))
         feat = self.neck(x)
         return feat
-
-if __name__ == "__main__":
-    model = VitPathology().cuda()
-    input = torch.randn(6, 3, 1024, 1024).cuda()
-    output = model(input)
