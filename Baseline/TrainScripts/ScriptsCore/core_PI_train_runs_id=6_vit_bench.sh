@@ -1,5 +1,5 @@
 python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "Core_006_TD_vit_bench_32cluster" \
+    --runs_id "Core_006_PI_vit_bench_32cluster" \
     --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,5 +12,5 @@ python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --img_size 512 \
     --num_epochs 200 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['TD']" \
+    --use_tasks "['PI']" \
     --data_type "CORE"
