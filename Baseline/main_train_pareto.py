@@ -51,6 +51,7 @@ if __name__ == '__main__':
                     'seed': args.seed,
                     'data_augment_method': args.augment_method,
                     'stain_prob': args.stain_prob,
+                    'data_type': args.data_type,
                 },
                 settings=wandb.Settings(_service_wait=300)
             )
@@ -81,6 +82,7 @@ if __name__ == '__main__':
                         'seed': args.seed,
                         'data_augment_method': args.augment_method,
                         'stain_prob': args.stain_prob,
+                        'data_type': args.data_type,
                     },
                     settings=wandb.Settings(_service_wait=300)
                 )

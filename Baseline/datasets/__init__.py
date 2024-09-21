@@ -16,10 +16,10 @@ def GetDataLoader(fold, mean_std=None, args=None, test_mode=False):
 
 def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):
     
-    train_set = GetDataset(0, "train", "ALL", mean_std, test_mode, args)
+    train_set = GetDataset(0, "train", args.data_type, mean_std, test_mode, args)
     mean_std = train_set.mean_std
-    valid_set = GetDataset(0, "valid", "ALL", mean_std, True, args)
-    test_set = GetDataset(0, "test", "ALL", mean_std, True, args)
+    valid_set = GetDataset(0, "valid", args.data_type, mean_std, True, args)
+    test_set = GetDataset(0, "test", args.data_type, mean_std, True, args)
     
     if args.use_ddp:
         num_gpus = torch.cuda.device_count()
@@ -40,9 +40,9 @@ def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):
 
 def GetCVDataLoader(fold, mean_std=None, args=None, test_mode=False):
     
-    train_set = GetDataset(fold, "train", "ALL", mean_std, test_mode, args)
+    train_set = GetDataset(fold, "train", args.data_type, mean_std, test_mode, args)
     mean_std = train_set.mean_std
-    valid_set = GetDataset(fold, "valid", "ALL", mean_std, True, args)
+    valid_set = GetDataset(fold, "valid", args.data_type, mean_std, True, args)
     
     if args.use_ddp:
         num_gpus = torch.cuda.device_count()

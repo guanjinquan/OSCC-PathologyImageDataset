@@ -176,7 +176,7 @@ class Trainer:
                 del x, y, out, total_loss, losses
                 pbar.update(1)
             pbar.close()
-            self.on_loader_exit('train', loss, outs, true)
+            self.on_loader_exit('train_sample', loss, outs, true)
     
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()

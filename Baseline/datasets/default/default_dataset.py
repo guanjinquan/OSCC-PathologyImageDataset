@@ -1,10 +1,7 @@
-import sys
-sys.path.append("/home/Guanjq/Work/MultiSitePathologyReccurence/Code")
 from torch.utils.data import Dataset
 import numpy as np
 import random
 import os
-from utils.config import parse_arguments
 import json
 from datasets.default import default_augment
 from PIL import Image
@@ -14,9 +11,10 @@ class MyBaseDataset(Dataset):
     def __init__(self, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=None, args=None):
         super().__init__()
         assert test_mode is not None, "test_mode can't be None."
+        assert args is not None, "args can't be None."
         
         # 所有成员变量归纳在这里
-        self.args = parse_arguments() if args is None else args
+        self.args = args
         self.mean_std = mean_std
         self.data_type = data_type
         self.type = type
@@ -83,7 +81,8 @@ class MyBaseDataset(Dataset):
         if self.transforms is not None:
             image = self.transforms(image)
             
-        assert image.shape[0] == 6, f"error = {self.items[index]['pid']}"
+        TARGET_NUM = 3 if self.data_type in ["EDGE", "CORE"] else 6
+        assert image.shape[0] == TARGET_NUM, f"error = {self.items[index]['pid']}"
         assert image.shape[1] == 3 and image.shape[2] == self.args.img_size and image.shape[3] == self.args.img_size, f"Invalid Shape : {image.shape} but config's img_size = {self.args.img_size}."
         
         return [image, labels, self.items[index]['pid']]  # image, labels, patient_id
