@@ -1,4 +1,4 @@
-python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --runs_id "EDGE_006_PI_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
