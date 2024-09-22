@@ -60,7 +60,7 @@ class Tester:
                 
                 _, losses = self.model.loss(out, y) 
                 for k, v in losses.items():
-                    loss[k] = loss.get(k, []) + [v]
+                    loss[k] = loss.get(k, []) + [v.item()]
                 for k, v in out.items():
                     outs[k] = outs.get(k, []) + v.detach().cpu().numpy().tolist()
                 for k, v in y.items():
