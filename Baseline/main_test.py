@@ -13,11 +13,19 @@ class Tester:
         self.args = parse_arguments() if args is None else args  # args可能是None，得用self.args
         self.fold = fold
         
-        task = eval(self.args.use_tasks)[0]
-        if fold == 0:
-            load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"valid_{task}_Best.pth")
+        
+        tasks = eval(self.args.use_tasks)
+        if len(tasks) > 1:
+            if fold == 0:
+                load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"valid_MultiTask_Best.pth")
+            else:
+                load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"fold{fold}", f"valid_MultiTask_Best.pth")
         else:
-            load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"fold{fold}", f"valid_{task}_Best.pth")
+            task = tasks[0]
+            if fold == 0:
+                load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"valid_{task}_Best.pth")
+            else:
+                load_pth_path = os.path.join(self.args.ckpt_path, self.args.model, self.args.runs_id, f"fold{fold}", f"valid_{task}_Best.pth")
         
         # dataset 
         mean_std = ([175.14728804175988, 110.57123792228117, 176.73598615775617], [21.239463551725915, 39.15991384752335, 10.99100631656543])
