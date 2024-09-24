@@ -207,8 +207,7 @@ class Trainer:
     def on_epoch_end(self):
         save_trainer(self, os.path.join(self.ckpt_path, 'Final_Trainer.pkl'))
         save_model(self.model, self.epoch, os.path.join(self.ckpt_path, f'Final.pth'))
-        if self.args.use_amp:
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
         if len(eval(self.args.use_tasks)) > 1:
             self.log.write(f"Multi-Task Best Score : {self.multi_task_best_score}")
             self.log.write(f"Multi-Task Best Metrics : {self.best_multi_task_metrics}")
