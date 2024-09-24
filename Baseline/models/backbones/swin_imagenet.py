@@ -4,7 +4,8 @@ from timm.models.swin_transformer_v2 import SwinTransformerV2, swinv2_base_windo
 import os
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com' 
 
-def get_swin(args):
+
+def get_swin_imageNet(args):
     state = swinv2_base_window12to16_192to256(pretrained=True, num_classes=1000).state_dict()
     # swin transformer 可以改变输入图片大小，但是要保证window_size能被整除
     # 找到合适的权重就行
@@ -35,37 +36,3 @@ def get_swin(args):
     model.patch_embed.img_size = None
 
     return model, 1024
-
-
-class SwinImageNet(nn.Module):
-    ensemble_num = 6
-    
-    def __init__(self, args):
-        super(SwinImageNet, self).__init__()
-        
-        self.extractor, self.embed_dim = get_swin(args)
-        
-        self.neck = nn.Sequential(
-            nn.Linear(self.embed_dim * self.ensemble_num, 768),  # 0
-            nn.LayerNorm(768), 
-            nn.ReLU(),
-        )
-        
-    def get_backbone_params(self):
-        return list(self.extractor.parameters())
-
-    def get_others_params(self):
-        backbones = set(self.get_backbone_params())
-        return [p for p in self.parameters() if p not in backbones]
-        
-    def forward(self, x):
-        assert x.shape[0] % self.ensemble_num == 0
-        x = self.extractor(x)
-        x = torch.reshape(x, (-1, self.embed_dim * self.ensemble_num))
-        return self.neck(x)
-
-
-if __name__ == "__main__":
-    model = SwinImageNet()
-    input = torch.ones((6, 3, 512, 512))
-    print(model(input).shape)

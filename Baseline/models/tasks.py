@@ -46,9 +46,12 @@ def GetHead(in_dim, out_dim):
     
 
 class MultiTaskModel(nn.Module):
-    def __init__(self, backbone, in_feat, args) -> None:
+    def __init__(self, backbone, fusion_block, in_feat, args) -> None:
         super(MultiTaskModel, self).__init__()
+        
         self.backbone = backbone
+        self.fusion_block = fusion_block
+        
         # support tasks
         self.support_tasks = \
             ['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']
@@ -71,7 +74,7 @@ class MultiTaskModel(nn.Module):
         print("Params Size:", sum(p.numel() for p in self.parameters()), flush=True)
     
     def get_backbone_params(self):
-        return self.backbone.get_backbone_params()
+        return self.backbone.parameters()
     
     def get_others_params(self):
         backbones = set(self.get_backbone_params())
@@ -97,10 +100,11 @@ class MultiTaskModel(nn.Module):
         return metrics
     
     def forward(self, *args, **kargs):
-        feat_p = self.backbone(*args, **kargs)
+        x = self.backbone(*args, **kargs)
+        x = self.fusion_block(x)
         outs = {}
         for task_name, task in self.tasks.items():
-            outs[task_name] = task(feat_p)
+            outs[task_name] = task(x)
         return outs
 
 

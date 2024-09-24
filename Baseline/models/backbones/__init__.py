@@ -1,8 +1,8 @@
-from models.backbones.densenet121_imagenet import Densenet121Imagenet as densenet121_imagenet
-from models.backbones.resnet_imagenet import ResNetImagenet as resnet_imagenet
-from models.backbones.swin_imagenet import SwinImageNet as swin_imagenet
-from models.backbones.vit_small_p16_pathology import VitPathology as vit_small_p16_pathology
-from models.backbones.vit_base_p16_medcoss import ViTBaseMedCoSS as vit_base_p16_medcoss
-from models.backbones.vit_base_hibou import VitHibou as vit_base_hibou
-from models.backbones.vit_base_p16_uni import VitUni as vit_base_p16_uni
-from models.backbones.vit_base_p16_conch import VitConch as vit_base_p16_conch
+from models.backbones.densenet121_imagenet import get_densenet121_imagenet
+from models.backbones.resnet_imagenet import get_resnet_imagenet
+from models.backbones.swin_imagenet import get_swin_imageNet
+from models.backbones.vit_small_p16_pathology import get_vit_base_pathology
+from models.backbones.vit_base_p16_medcoss import get_vit_base_medcoss
+from models.backbones.vit_base_hibou import get_vit_base_hibou
+from models.backbones.vit_base_p16_uni import get_vit_base_uni
+from models.backbones.vit_base_p16_conch import get_vit_base_conch
