@@ -5,7 +5,8 @@ import numpy as np
 import wandb
 import torch
 from torch.cuda.amp import autocast
-from modules.trainer import Trainer, get_score
+from modules.trainer import Trainer
+from utils import load_model
 
         
 class GradNormTrainer(Trainer):
@@ -19,6 +20,15 @@ class GradNormTrainer(Trainer):
         # GradNorm hyperparameter
         self.alpha = 0.12
         self.loss_weights_grad = []
+        
+        # load loss_weight pretrain
+        if self.args.finetune:
+            assert self.args.load_pth_path is not None, "load_path can't be None."
+            print(f"Load from {self.args.load_pth_path}!!!", flush=True)
+            cp = load_model(self.args.load_pth_path)
+            pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+            pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
+            self.model.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
         
     def grad_norm_method(self, task_loss):
         # get layer of shared weights
@@ -75,6 +85,12 @@ class GradNormTrainer(Trainer):
             true = {}
             self.optimizer.zero_grad()            
             for i, (x, y, p_idxs) in enumerate(train_loader, 1):
+                
+                if self.local_rank == 0:
+                    # log the loss weights
+                    for j, task in enumerate(eval(self.args.use_tasks)):
+                        wandb.log({f'loss_weight_{task}': self.model.loss_weights[j].item()})
+                
                 x = x.cuda()
                 for k, v in y.items():
                     y[k] = v.cuda()
@@ -110,7 +126,7 @@ class GradNormTrainer(Trainer):
                 
                 # set the gradients of Lw_i(t) to zero
                 self.model.loss_weights.grad.data = self.model.loss_weights.grad.data * 0.0
-                self.loss_weights_grad.append(self.grad_norm_method(tasks_loss))
+                self.loss_weights_grad.append(self.grad_norm_method(tasks_loss).clone())
                 if i % self.acc_step == 0 or i == len(train_loader):  # i starts from 1
                     self.model.loss_weights.grad = torch.mean(torch.stack(self.loss_weights_grad), dim=0)
                     self.loss_weights_grad.clear()

@@ -26,6 +26,7 @@ class ParetoTrainer(Trainer):
         scale = {}
         grads = {}
         
+        num_of_task = len(self.tasks)
         out = self.model(x)
         _, tasks_loss = self.LossFn(out, y)
        
@@ -33,28 +34,6 @@ class ParetoTrainer(Trainer):
             self.model.zero_grad()
             loss_data[t] = tasks_loss[t].item()
             tasks_loss[t].backward(retain_graph=True)  # can't use ddp in pareto because of redudant grads
-            
-            """
-            Traceback (most recent call last):                                                                                                                                                                                               
-            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_pareto.py", line 58, in <module>                                                                                                                        
-                trainer.run()                                                                                                                                                                                                                
-            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/trainer.py", line 112, in run                                                                                                                              
-                self.train_epoch(self.train_loader)                                                                                                                                                                                          
-            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/pareto_trainer.py", line 81, in train_epoch                                                                                                                
-                scale = self.calc_pareto_weights(x, y).to(self.device)                                                                                                                                                                       
-            File "/home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/modules/pareto_trainer.py", line 35, in calc_pareto_weights
-                tasks_loss[t].backward(retain_graph=True)
-            File "/home/Guanjq/miniconda3/envs/resnet_demo/lib/python3.7/site-packages/torch/_tensor.py", line 488, in backward
-                self, gradient, retain_graph, create_graph, inputs=inputs
-            File "/home/Guanjq/miniconda3/envs/resnet_demo/lib/python3.7/site-packages/torch/autograd/__init__.py", line 199, in backward
-                allow_unreachable=True, accumulate_grad=True)  # Calls into the C++ engine to run the backward pass
-            RuntimeError: Expected to mark a variable ready only once. This error is caused by one of the following reasons: 1) Use of a module parameter outside the `forward` function. Please make sure model parameters are not shared ac
-            ross multiple concurrent forward-backward passes. or try to use _set_static_graph() as a workaround if this module graph does not change during training loop.2) Reused parameters in multiple reentrant backward passes. For exa
-            mple, if you use multiple `checkpoint` functions to wrap the same part of your model, it would result in the same set of parameters been used by different reentrant backward passes multiple times, and hence marking a variable
-            ready multiple times. DDP does not support such use cases in default. You can try to use _set_static_graph() as a workaround if your module graph does not change over iterations.
-            Parameter at index 152 has been marked as ready twice. This means that multiple autograd engine  hooks have fired for this particular parameter during this iteration. You can set the environment variable TORCH_DISTRIBUTED_DEB
-            UG to either INFO or DETAIL to print parameter names for further debugging.
-            """
             
             grads[t] = []
             key_params = self.model.module.backbone if self.args.use_ddp else self.model.backbone
@@ -73,7 +52,7 @@ class ParetoTrainer(Trainer):
             scale[t] = float(sol[i])
         
         scale_tensor = torch.tensor([scale[t] for t in self.model.tasks.keys()]).to(self.device)
-        return scale_tensor
+        return scale_tensor * num_of_task  # (1, 6)
 
     def backup_grad(self):
         for name, param in self.model.named_parameters():
@@ -103,6 +82,11 @@ class ParetoTrainer(Trainer):
                 
                 scale = self.calc_pareto_weights(x, y).to(self.device)
                 self.validation_scale += scale
+                
+                if self.local_rank == 0:
+                    # log the loss weights
+                    for j, task in enumerate(eval(self.args.use_tasks)):
+                        wandb.log({f'loss_weight_{task}': scale[j].item()})
                 
                 self.model.zero_grad()
                 if self.args.use_amp:
