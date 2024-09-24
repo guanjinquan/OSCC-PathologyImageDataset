@@ -26,6 +26,7 @@ def parse_arguments():
     
     # models settings 
     parser.add_argument('--model', type=str)
+    parser.add_argument('--fusion_block', type=str, default='concat', help="fusion_block: [concat, LMF, gated, transformer_encoder]")
     parser.add_argument('--use_tasks', type=str, default="['tumor_diff', 'cancer_embolus', 'invasion', 'tumor_N', 'recurrence']", help="use task, e.g. ['tumor_diff', 'cancer_embolus', 'invasion', 'tumor_N', 'recurrence']")
 
     

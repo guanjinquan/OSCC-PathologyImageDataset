@@ -6,6 +6,7 @@ from scipy import ndimage
 from timm.models.vision_transformer import VisionTransformer
 import torch
 
+
 def vit_get_pretrained_url(key):
     URL_PREFIX = "https://github.com/lunit-io/benchmark-ssl-pathology/releases/download/pretrained-weights"
     model_zoo_registry = {
@@ -14,6 +15,7 @@ def vit_get_pretrained_url(key):
     }
     pretrained_url = f"{URL_PREFIX}/{model_zoo_registry.get(key)}"
     return pretrained_url
+
 
 def vit_small(args, pretrained, progress, key):
     patch_size = 16
@@ -43,29 +45,17 @@ def vit_small(args, pretrained, progress, key):
         
     return model
 
-class VitPathology(nn.Module):
 
+class VitPathology(nn.Module):
     def __init__(self, args):
         super(VitPathology, self).__init__()
-        
         self.extractor = vit_small(args, pretrained=True, progress=True, key="DINO_p16")
-        self.ensemble_num = 6 if args.data_type == "ALL" else 3
-        self.neck = nn.Sequential(
-            nn.Linear(384 * self.ensemble_num, 768),  # 0
-            nn.LayerNorm(768), 
-            nn.ReLU(),
-        )
-    
-    def get_backbone_params(self):
-        return list(self.extractor.parameters())
-
-    def get_others_params(self):
-        backbones = set(self.get_backbone_params())
-        return [p for p in self.parameters() if p not in backbones]
         
     def forward(self, x):
-        assert x.shape[0] % self.ensemble_num == 0
         x = self.extractor(x)
-        x = torch.reshape(x, (-1, 384 * self.ensemble_num))
-        feat = self.neck(x)
-        return feat
+        return x
+
+
+def get_vit_base_pathology(args):
+    model = VitPathology(args)
+    return model, 384

@@ -6,7 +6,6 @@ import os
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 import torch
 import torch.nn.functional as F
-from safetensors import safe_open
 
 
 def get_hibou(args):
@@ -29,25 +28,10 @@ def get_hibou(args):
 
 
 class VitHibou(nn.Module):
-    ensemble_num = 6
-    
     def __init__(self, args):
         super(VitHibou, self).__init__()
-        
         self.extractor, self.patch_size = get_hibou(args)
-        self.neck = nn.Sequential(
-            nn.Linear(768 * self.ensemble_num, 768),  # 0
-            nn.LayerNorm(768), 
-            nn.ReLU(),
-        )
-    
-    def get_backbone_params(self):
-        return list(self.extractor.parameters())
 
-    def get_others_params(self):
-        backbones = set(self.get_backbone_params())
-        return [p for p in self.parameters() if p not in backbones]
-        
     def forward(self, x):
         assert x.shape[0] % self.ensemble_num == 0
         if x.shape[-1] % self.patch_size != 0:
@@ -55,6 +39,9 @@ class VitHibou(nn.Module):
             pad = (self.patch_size - x.shape[-1] % self.patch_size) // 2
             x = F.pad(x, (pad, pad, pad, pad), mode='constant', value=0)
         x = self.extractor(x).last_hidden_state[:, 0, :]
-        x = torch.reshape(x, (-1, 768 * self.ensemble_num))
-        feat = self.neck(x)
-        return feat
+        return x
+
+
+def get_vit_base_hibou(args):
+    model = VitHibou(args)
+    return model, 768
