@@ -52,6 +52,7 @@ class Trainer:
             print(f"Fine-tune from {self.args.load_pth_path}!!!", flush=True)
             cp = load_model(self.args.load_pth_path)
             pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+            pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
             self.model.load_state_dict(pretrain)
             
         self.epoch = 0

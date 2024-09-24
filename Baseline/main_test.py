@@ -39,6 +39,7 @@ class Tester:
         print(f"Load from {load_pth_path}!!!", flush=True)
         cp = load_model(load_pth_path)
         pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+        pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
         self.model.load_state_dict(pretrain)
 
     

@@ -206,3 +206,10 @@ def gradient_normalizers(grads, losses, normalization_type):
     else:
         print('ERROR: Invalid Normalization Type')
     return gn
+
+
+
+if __name__ == "__main__":
+    
+    MinNormSolver.find_min_norm_element([torch.ones()[t] for t in self.tasks])
+    

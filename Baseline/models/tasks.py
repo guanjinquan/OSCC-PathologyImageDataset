@@ -14,14 +14,6 @@ import torch.nn.functional as F
 # loss_weight : str
 # use_tasks : str 
 
-TASK_ID = {
-    'REC': 0,
-    'LNM': 1,
-    'TD': 2,
-    'TI': 3,
-    'CE': 4,
-    'PI': 5
-}
 
 def metrics(out, target):
     probs = torch.softmax(torch.tensor(out), dim=1).detach().numpy()
@@ -161,7 +153,7 @@ class RecTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return FocalLoss()(out, target)
+        return F.cross_entropy(out, target)
     
     def metrics(self, out, target):
         probs = torch.softmax(out, dim=1).detach().numpy()
