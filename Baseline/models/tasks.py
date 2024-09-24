@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/mnt/Guanjq/Work/PathoCls/Code')
 from typing import Any
 from settings.loss import FocalLoss
 from torch.nn import CrossEntropyLoss
@@ -13,7 +11,6 @@ import torch.nn.functional as F
 # MultiTaskMI argutments:
 # loss_weight : str
 # use_tasks : str 
-
 
 def metrics(out, target):
     probs = torch.softmax(torch.tensor(out), dim=1).detach().numpy()
@@ -276,7 +273,7 @@ class LNMTask(nn.Module):
             return torch.tensor(0.0, requires_grad=True).float().to(out.device)
         out = out[mask]
         target = target[mask]
-        return FocalLoss()(out, target)
+        return F.cross_entropy(out, target)
     
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
