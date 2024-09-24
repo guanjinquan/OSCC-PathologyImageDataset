@@ -95,17 +95,14 @@ class GatedFusionBLock(nn.Module):
     def forward(self, x):
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
         assert x.shape[0] % self.num_feat == 0, f"x.shape[0]: {x.shape[0]}, self.num_feat: {self.num_feat}"
-        
+
         # [b*n, in_d] -> [n, b, out_d]
         x = self.transition(x)
-        
         # [b*n, d] -> [n, b, d]
-        x = torch.reshape(x, (-1, self.num_feat, self.in_dim)).permute(1, 0, 2)
-        
+        x = torch.reshape(x, (-1, self.num_feat, self.out_dim)).permute(1, 0, 2)
         # sigmoid and tanh
         gate = torch.sigmoid(x)
         y = torch.tanh(x)         
-        
         # [n, b, d] -> [b, d]
         y = (gate * y).sum(dim=0)
         return y
@@ -164,12 +161,13 @@ if __name__ == "__main__":
     print(out.shape)
     
     # gated-fusion
-    model = GatedFusionBLock(3, 768, 768).cuda()
+    input = torch.randn(24, 384).cuda()
+    model = GatedFusionBLock(3, 384, 768).cuda()
     out = model(input)
     print(out.shape)
     
     # self-attention fusion
-    model = MSAFusionBlock(3, 768, 768).cuda()
+    model = MSAFusionBlock(3, 384, 768).cuda()
     out = model(input)
     print(out.shape)
         
