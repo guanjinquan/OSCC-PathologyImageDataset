@@ -32,7 +32,7 @@ class GradNormTrainer(Trainer):
         
     def grad_norm_method(self, task_loss):
         # get layer of shared weights
-        W = self.model.backbone.neck  # neck is the last shared layer in our model
+        W = self.model.fusion_block  # neck is the last shared layer in our model
 
         if self.initial_task_loss is None:
             # set L(0)
@@ -129,6 +129,11 @@ class GradNormTrainer(Trainer):
                 self.loss_weights_grad.append(self.grad_norm_method(tasks_loss).clone())
                 if i % self.acc_step == 0 or i == len(train_loader):  # i starts from 1
                     self.model.loss_weights.grad = torch.mean(torch.stack(self.loss_weights_grad), dim=0)
+                    print(f"loss_weights_grad: {self.model.loss_weights.grad}", flush=True)
+                    self.log.write(f"loss_weights_grad: {self.model.loss_weights.grad}\n")
+                    
+                    exit(0)
+                    
                     self.loss_weights_grad.clear()
                     if self.args.use_amp:
                         self.scaler.step(self.optimizer)
