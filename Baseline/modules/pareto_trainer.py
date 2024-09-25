@@ -1,13 +1,11 @@
-import sys
+import matplotlib.pyplot as plt
 import os
 from modules.min_norm_solvers import MinNormSolver, gradient_normalizers
-from utils import save_model
 import tqdm
 import numpy as np
-import wandb
 import torch
 from torch.cuda.amp import autocast
-from modules.trainer import Trainer, get_score
+from modules.trainer import Trainer
 
         
 class ParetoTrainer(Trainer):
@@ -18,6 +16,7 @@ class ParetoTrainer(Trainer):
         self.grad_backup = {}  # gradients backup for accumulating
         self.tasks = list(self.model.module.tasks.keys()) if self.args.use_ddp else list(self.model.tasks.keys())
         self.validation_scale = torch.tensor([1.0 for _ in self.tasks]).to(self.device)
+        self.scale_list = [[] for _ in range(len(self.tasks))]
 
     def calc_pareto_weights(self, x, y):
         # forward once to get the loss
@@ -80,13 +79,11 @@ class ParetoTrainer(Trainer):
                     y[k] = v.cuda()
                 p_idxs = p_idxs.cpu().data.numpy()
                 
-                scale = self.calc_pareto_weights(x, y).to(self.device)
-                self.validation_scale += scale
-                
                 if self.local_rank == 0:
-                    # log the loss weights
-                    for j, task in enumerate(eval(self.args.use_tasks)):
-                        wandb.log({f'loss_weight_{task}': scale[j].item()})
+                    scale = self.calc_pareto_weights(x, y).to(self.device)
+                    for j, _ in enumerate(self.tasks):
+                        self.scale_list[j].append(scale[j].item())
+                    self.validation_scale += scale
                 
                 self.model.zero_grad()
                 if self.args.use_amp:
@@ -131,8 +128,20 @@ class ParetoTrainer(Trainer):
                 del x, y, weighted_loss, losses
                 pbar.update(1)
             pbar.close()
-            self.on_loader_exit('train', loss, outs, true)
-    
+            self.on_loader_exit('train_sample', loss, outs, true)
+            
+            # draw the scale
+            if self.local_rank == 0:
+                plt.cla()
+                fig, ax = plt.subplots(2, 3)
+                ax = ax.flatten()
+                X = np.arange(len(self.scale_list[0]))
+                for i, w_list in enumerate(self.scale_list):
+                    ax[i].plot(X, w_list, label=f'task_{i}',linewidth = 0.5)
+                    ax[i].plot(X, [1] * len(X), 'r--')  # no label
+                    ax[i].legend()
+                plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
+                    
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
         with torch.no_grad():

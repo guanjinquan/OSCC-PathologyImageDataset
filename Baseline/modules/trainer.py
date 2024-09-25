@@ -56,12 +56,13 @@ class Trainer:
             self.model.load_state_dict(pretrain)
             
         self.epoch = 0
+        self.iters = 0
         self.acc_step = self.args.acc_step  # accumulate_step
         
         # early stop
         self.loss_history = []
         self.patience = self.args.num_epochs // 2
-        self.monitor_length = 50  # monitor the last 50 epochs
+        self.monitor_length = 30  # monitor the last 50 epochs
         
         # amp
         if self.args.use_amp:
@@ -77,18 +78,18 @@ class Trainer:
         
         # trainer config
         run_path = [self.args.model, self.args.runs_id, 'fold'+str(fold)][:2+int(fold>0)]
-        log_path = os.path.join(self.args.log_path, *run_path)
+        self.log_path = os.path.join(self.args.log_path, *run_path)
         self.ckpt_path = os.path.join(self.args.ckpt_path, *run_path) 
-        print("log_path : ", log_path, flush=True)
+        print("log_path : ", self.log_path, flush=True)
         print("ckpt_path : ", self.ckpt_path, flush=True)
         
         if os.path.exists(os.path.join(self.ckpt_path, 'Final_Trainer.pkl')):
             print("Trainer already exists!!!", flush=True)
             raise ValueError("Trainer already exists!!!")
         
-        os.makedirs(log_path, exist_ok=True)
+        os.makedirs(self.log_path, exist_ok=True)
         os.makedirs(self.ckpt_path, exist_ok=True)
-        self.log = Logger(os.path.join(log_path, 'log.txt'))
+        self.log = Logger(os.path.join(self.log_path, 'log.txt'))
         self.log.write("settings : " + str(args))
         self.log.write("MeanStd = " + str(self.train_loader.dataset.mean_std))
     

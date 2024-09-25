@@ -51,7 +51,7 @@ class MultiTaskModel(nn.Module):
         
         self.backbone = backbone
         self.fusion_block = fusion_block
-        
+            
         # support tasks
         self.support_tasks = \
             ['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']
