@@ -1,12 +1,12 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train_grad_norm.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_grad_norm.py \
     --runs_id "001_GradNorm_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
     --backbone_lr 5e-7 \
-    --acc_step 8 \
-    --batch_size 2 \
+    --acc_step 16 \
+    --batch_size 1 \
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \

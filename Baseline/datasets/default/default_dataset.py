@@ -107,13 +107,17 @@ class MyBaseDataset(Dataset):
         self.items = list(filter(lambda x: x['pid'] in target_pid, self.items))
         assert self._check_datapath(), "Not all paths exist!"
 
-        # debug模式
-        if self.args.debug_mode:  # 正负类各50个
+        # debug mode
+        if self.args.debug_mode:  
             temp_items = {}
-            task = eval(self.args.use_tasks)[0]
+            task = eval(self.args.use_tasks)
             for item in self.items:
-                temp_items[item[task]] = temp_items.get(item[task], [])
-                temp_items[item[task]].append(item)
+                key = []
+                for t in task:
+                    key.append(item[t])
+                key = tuple(key)
+                temp_items[key] = temp_items.get(key, [])
+                temp_items[key].append(item)
             self.items = []
             for k, v in temp_items.items():
                 self.items.extend(v[:10])

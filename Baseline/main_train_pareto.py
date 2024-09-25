@@ -36,7 +36,7 @@ if __name__ == '__main__':
         
         if trainer.local_rank == 0:
             wandb.init(
-                project="OSCC-PathoCls",
+                project="OSCC-PathoCls-V2",
                 name=f"{args.model}-{args.runs_id}",
                 config={
                     'batch_size': args.batch_size * args.acc_step,
@@ -52,6 +52,7 @@ if __name__ == '__main__':
                     'data_augment_method': args.augment_method,
                     'stain_prob': args.stain_prob,
                     'data_type': args.data_type,
+                    "feature_fusion": args.fusion_block,
                 },
                 settings=wandb.Settings(_service_wait=300)
             )
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     
             if trainer.local_rank == 0:
                 wandb.init(
-                    project="OSCC-PathoCls",
+                    project="OSCC-PathoCls-V2",
                     name=f"{args.model}-{args.runs_id}-{fold}",
                     config={
                         'batch_size': args.batch_size *  args.acc_step,
@@ -83,6 +84,7 @@ if __name__ == '__main__':
                         'data_augment_method': args.augment_method,
                         'stain_prob': args.stain_prob,
                         'data_type': args.data_type,
+                        "feature_fusion": args.fusion_block,
                     },
                     settings=wandb.Settings(_service_wait=300)
                 )

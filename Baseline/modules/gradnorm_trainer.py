@@ -1,8 +1,7 @@
-from utils import save_model
 import os
 import tqdm
 import numpy as np
-import wandb
+import matplotlib.pyplot as plt
 import torch
 from torch.cuda.amp import autocast
 from modules.trainer import Trainer
@@ -14,7 +13,8 @@ class GradNormTrainer(Trainer):
         super().__init__(fold, args)
         
         # loss weights for each task [register as a parameter]
-        self.model.loss_weights = torch.nn.Parameter(torch.ones(len(eval(self.args.use_tasks))).cuda())
+        self.loss_weights = torch.nn.Parameter(torch.ones(len(eval(self.args.use_tasks))).cuda())
+        self.GradNormOptimizer = torch.optim.Adam([self.loss_weights], lr=1e-5)
         self.initial_task_loss = None
         
         # GradNorm hyperparameter
@@ -28,7 +28,9 @@ class GradNormTrainer(Trainer):
             cp = load_model(self.args.load_pth_path)
             pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
             pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
-            self.model.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
+            self.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
+        
+        self.loss_weight_list = [[] for _ in range(len(eval(self.args.use_tasks)))]
         
     def grad_norm_method(self, task_loss):
         # get layer of shared weights
@@ -48,7 +50,7 @@ class GradNormTrainer(Trainer):
             # get the gradient of this task loss with respect to the shared parameters
             gygw = torch.autograd.grad(task_loss[i], W.parameters(), retain_graph=True)
             # compute the norm
-            norms.append(torch.norm(torch.mul(self.model.loss_weights[i], gygw[0])))
+            norms.append(torch.norm(torch.mul(self.loss_weights[i], gygw[0])))
         norms = torch.stack(norms)
 
         # compute the inverse training rate r_i(t)  \curl{L}_i 
@@ -75,7 +77,7 @@ class GradNormTrainer(Trainer):
         grad_norm_loss = torch.sum(torch.abs(norms - constant_term))
 
         # compute the gradient for the weights
-        return torch.autograd.grad(grad_norm_loss, self.model.loss_weights)[0]
+        return torch.autograd.grad(grad_norm_loss, self.loss_weights)[0]
         
     def train_epoch(self, train_loader):
         self.model.train()
@@ -85,12 +87,6 @@ class GradNormTrainer(Trainer):
             true = {}
             self.optimizer.zero_grad()            
             for i, (x, y, p_idxs) in enumerate(train_loader, 1):
-                
-                if self.local_rank == 0:
-                    # log the loss weights
-                    for j, task in enumerate(eval(self.args.use_tasks)):
-                        wandb.log({f'loss_weight_{task}': self.model.loss_weights[j].item()})
-                
                 x = x.cuda()
                 for k, v in y.items():
                     y[k] = v.cuda()
@@ -101,13 +97,13 @@ class GradNormTrainer(Trainer):
                         out = self.model(x)
                         _, losses = self.LossFn(out, y)
                         tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
-                        weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
+                        weighted_loss = torch.sum(self.loss_weights * tasks_loss)
                         weighted_loss = self.scaler.scale(weighted_loss)
                 else:
                     out = self.model(x)
                     _, losses = self.LossFn(out, y)
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
-                    weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
+                    weighted_loss = torch.sum(self.loss_weights * tasks_loss)
                     
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
                 for k, v in losses.items():
@@ -125,16 +121,21 @@ class GradNormTrainer(Trainer):
                 weighted_loss.backward(retain_graph=True)
                 
                 # set the gradients of Lw_i(t) to zero
-                self.model.loss_weights.grad.data = self.model.loss_weights.grad.data * 0.0
+                self.loss_weights.grad.data = self.loss_weights.grad.data * 0.0
                 self.loss_weights_grad.append(self.grad_norm_method(tasks_loss).clone())
                 if i % self.acc_step == 0 or i == len(train_loader):  # i starts from 1
-                    self.model.loss_weights.grad = torch.mean(torch.stack(self.loss_weights_grad), dim=0)
-                    print(f"loss_weights_grad: {self.model.loss_weights.grad}", flush=True)
-                    self.log.write(f"loss_weights_grad: {self.model.loss_weights.grad}\n")
+                    self.loss_weights.grad = torch.mean(torch.stack(self.loss_weights_grad), dim=0)
                     
-                    exit(0)
+                    # loss weights record
+                    for i, w in enumerate(self.loss_weights.grad):
+                        self.loss_weight_list[i].append(w.item())
                     
+                    # Loss weights update
+                    self.GradNormOptimizer.step()
+                    self.GradNormOptimizer.zero_grad()
                     self.loss_weights_grad.clear()
+                    
+                    # model weights update
                     if self.args.use_amp:
                         self.scaler.step(self.optimizer)
                         self.scaler.update()
@@ -146,7 +147,20 @@ class GradNormTrainer(Trainer):
                 del x, y, out, weighted_loss, losses
                 pbar.update(1)
             pbar.close()
-            self.on_loader_exit('train', loss, outs, true)
+
+            self.on_loader_exit('train_sample', loss, outs, true)
+            
+            # draw loss weights curve
+            if self.local_rank == 0:
+                plt.cla()
+                fig, ax = plt.subplots(2, 3)
+                ax = ax.flatten()
+                X = np.arange(len(self.loss_weight_list[0]))
+                for i, w_list in enumerate(self.loss_weight_list):
+                    ax[i].plot(X, w_list, label=f'task_{i}',linewidth = 0.5)
+                    ax[i].plot(X, [1] * len(X), 'r--')  # no label
+                    ax[i].legend()
+                plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
                             
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
@@ -163,7 +177,7 @@ class GradNormTrainer(Trainer):
                 out = self.model(x)
                 _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
-                weighted_loss = torch.sum(self.model.loss_weights * tasks_loss)
+                weighted_loss = torch.sum(self.loss_weights * tasks_loss)
                 
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
                 for k, v in losses.items():
