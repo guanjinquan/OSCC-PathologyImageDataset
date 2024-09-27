@@ -34,10 +34,10 @@ def GetOptimizer(args, model):
     
 def GetScheduler(args, optim):
     if args.scheduler == 'CosineAnnealingLR':
-        return torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.num_epochs, eta_min=1e-15)
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.num_epochs, eta_min=1e-9)
     elif args.scheduler == 'CosineAnnealingLR_warmup':
         assert args.num_epochs % 2 == 0, "num_epochs must be even"
-        return torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.num_epochs // 2, eta_min=1e-15)
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.num_epochs // 2, eta_min=1e-9)
     elif args.scheduler == 'OneCycleLR':
         return torch.optim.lr_scheduler.OneCycleLR(
                 optim, 
