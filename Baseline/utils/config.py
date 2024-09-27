@@ -47,6 +47,7 @@ def parse_arguments():
                         help='choose scheduler')
     parser.add_argument('--use_amp', type=bool, default=False)
     parser.add_argument('--use_ddp', type=bool, default=False)
+    parser.add_argument('--continue_training', type=bool, default=False)
     
     
     args = parser.parse_args()
