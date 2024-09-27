@@ -110,8 +110,10 @@ class Trainer:
             if self.loss_history[-1] >= np.mean(self.loss_history[-self.monitor_length:]):
                 early_stop_flag += 1  # kill all processes at this time
         if self.args.use_ddp:      
-            dist.all_reduce(early_stop_flag, op=dist.ReduceOp.SUM)
-        if early_stop_flag.item() >= 1:
+            dist.all_reduce(early_stop_flag,op=dist.ReduceOp.SUM)
+        if early_stop_flag.item() == 1:
+            print("Early stopping!!! on  epoch " + str(self.epoch), flush=True)
+            self.log.write("Early stopping!!! on epoch " + str(self.epoch))
             return True
         return False
     
