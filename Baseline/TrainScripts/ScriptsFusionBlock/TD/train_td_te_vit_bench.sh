@@ -1,6 +1,7 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+# tmux 2
+python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --runs_id "fusion_TE_004_TD_vit_bench_32cluster" \
-    --gpu_id "0" \
+    --gpu_id "3" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
