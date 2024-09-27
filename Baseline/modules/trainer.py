@@ -1,7 +1,7 @@
 from datasets import GetDataLoader
 from models import GetModel
 from settings import GetOptimizer, GetScheduler
-from utils import Logger, save_trainer, save_model, load_model
+from utils import Logger, save_trainer, save_model, load_model, load_trainer
 import os
 import tqdm
 import numpy as np
@@ -47,22 +47,31 @@ class Trainer:
         self.train_loader, self.val_loader, self.test_loader = \
             GetDataLoader(fold, mead_std, self.args, False)
         print("MeanStd = " + str(self.train_loader.dataset.mean_std)) 
+        
+        self.epoch = 0
+        self.iters = 0
+        self.acc_step = self.args.acc_step  # accumulate_step
             
-        if self.args.finetune:
+        if self.args.continue_training:
+            ckp_trainer = load_trainer(self.args.load_pth_path)
+            self.epoch = ckp_trainer.epoch
+            print(f"Continue training from {self.args.load_pth_path} !!!", flush=True)
+            print("Now epoch : ", self.epoch, flush=True)
+            self.optimizer.load_state_dict(ckp_trainer.optimizer.state_dict())
+            self.scheduler.load_state_dict(ckp_trainer.scheduler.state_dict())
+            self.model.load_state_dict(ckp_trainer.model.state_dict())
+            del ckp_trainer
+        elif self.args.finetune:
             print(f"Fine-tune from {self.args.load_pth_path}!!!", flush=True)
             cp = load_model(self.args.load_pth_path)
             pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
             pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
             self.model.load_state_dict(pretrain)
             
-        self.epoch = 0
-        self.iters = 0
-        self.acc_step = self.args.acc_step  # accumulate_step
-        
         # early stop
         self.loss_history = []
         self.patience = self.args.num_epochs // 2
-        self.monitor_length = 30  # monitor the last 50 epochs
+        self.monitor_length = 20  # monitor the last 20 epochs
         
         # amp
         if self.args.use_amp:
@@ -98,11 +107,11 @@ class Trainer:
         epoch_run = len(self.loss_history)
         early_stop_flag= torch.zeros(1).to(self.device)
         if self.local_rank == 0 and epoch_run > self.patience and epoch_run > self.monitor_length:
-            if self.loss_history[-1] > np.mean(self.loss_history[-self.monitor_length:]):
+            if self.loss_history[-1] >= np.mean(self.loss_history[-self.monitor_length:]):
                 early_stop_flag += 1  # kill all processes at this time
         if self.args.use_ddp:      
-            dist.all_reduce(early_stop_flag,op=dist.ReduceOp.SUM)
-        if early_stop_flag.item() == 1:
+            dist.all_reduce(early_stop_flag, op=dist.ReduceOp.SUM)
+        if early_stop_flag.item() >= 1:
             return True
         return False
     
