@@ -1,5 +1,5 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "fusion_concat_001_REC_vit_bench_32cluster" \
+    --runs_id "fusion_concat_001_TI_vit_bench_32cluster" \
     --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,5 +12,5 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_trai
     --img_size 512 \
     --num_epochs 200 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['REC']" \
+    --use_tasks "['TI']" \
     --fusion_block 'concat'
