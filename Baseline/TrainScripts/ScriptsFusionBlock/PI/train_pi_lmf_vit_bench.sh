@@ -1,4 +1,4 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
+python /mnt/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --runs_id "fusion_LMF_003_PI_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
@@ -10,7 +10,7 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_trai
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
-    --num_epochs 300 \
+    --num_epochs 400 \
     --model "vit_small_p16_pathology" \
     --use_tasks "['PI']" \
     --fusion_block 'LMF'
