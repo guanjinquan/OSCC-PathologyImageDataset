@@ -1,5 +1,6 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "fusion_TE_004_TI_vit_bench_32cluster" \
+# tmux 2
+python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
+    --runs_id "fusion_TE_004_TD_vit_bench_32cluster" \
     --gpu_id "3" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -12,5 +13,5 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_trai
     --img_size 512 \
     --num_epochs 400 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['TI']" \
+    --use_tasks "['TD']" \
     --fusion_block 'transformer_encoder'
