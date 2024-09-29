@@ -1,4 +1,4 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
+python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --runs_id "005_TI_vit_base_p16_conch" \
     --gpu_id "1" \
     --seed 109 \

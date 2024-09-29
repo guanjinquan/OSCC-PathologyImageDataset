@@ -44,11 +44,10 @@ def vit_small(args, pretrained, progress, key):
     return model
 
 class VitPathology(nn.Module):
-    ensemble_num = 6
     
     def __init__(self, args):
         super(VitPathology, self).__init__()
-        
+        self.ensemble_num = 6 if args.data_type == "ALL" else 3    
         self.extractor = vit_small(args, pretrained=True, progress=True, key="DINO_p16")
 
         self.neck = nn.Sequential(
