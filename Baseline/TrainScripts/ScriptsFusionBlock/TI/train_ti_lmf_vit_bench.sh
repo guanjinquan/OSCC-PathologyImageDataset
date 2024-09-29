@@ -5,8 +5,8 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_trai
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
     --backbone_lr 5e-7 \
-    --acc_step 8 \
-    --batch_size 2 \
+    --acc_step 4 \
+    --batch_size 4 \
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
