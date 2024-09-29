@@ -17,6 +17,8 @@ class ConcatBlock(nn.Module):
             nn.LayerNorm(self.out_dim), 
             nn.ReLU(),
         )
+        print("Params : ", sum(p.numel() for p in self.parameters()) / 1e6, " MB")
+        
         
     def forward(self, x):
         # x.shape = (batch_size * num_feat, in_dim)
@@ -52,7 +54,8 @@ class LowRankFusionBlock(nn.Module):
             nn.ReLU(),
             nn.Linear(self.out_dim, self.out_dim),  
         )
-        
+        print("Params : ", sum(p.numel() for p in self.parameters()) / 1e6, " MB")
+    
     def forward(self, x):
         device = x.device
         b, n = x.shape[0] // self.num_feat, self.num_feat
@@ -91,7 +94,8 @@ class GatedFusionBLock(nn.Module):
         self.out_dim = out_dim
         
         self.transition = nn.Linear(self.in_dim, self.out_dim)
-    
+        print("Params : ", sum(p.numel() for p in self.parameters()) / 1e6, " MB")
+        
     def forward(self, x):
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
         assert x.shape[0] % self.num_feat == 0, f"x.shape[0]: {x.shape[0]}, self.num_feat: {self.num_feat}"
@@ -131,6 +135,7 @@ class MSAFusionBlock(nn.Module):
                 attention_dropout = 0,
             ) for _ in range(self.layers_num)]
         )
+        print("Params : ", sum(p.numel() for p in self.parameters()) / 1e6, " MB")
         
     def forward(self, x):
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"

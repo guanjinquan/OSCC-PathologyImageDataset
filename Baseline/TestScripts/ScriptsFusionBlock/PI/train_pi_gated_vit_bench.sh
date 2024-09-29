@@ -1,4 +1,4 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
+python /mnt/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --runs_id "fusion_gated_002_PI_vit_bench_32cluster" \
     --gpu_id "0" \
     --seed 109 \
