@@ -1,5 +1,6 @@
 from datasets import GetDataLoader
 from models import GetModel
+from oldmodels import GetModel as GetOldModel
 from utils import load_model, parse_arguments
 import numpy as np
 from utils.config import parse_arguments
@@ -38,9 +39,22 @@ class Tester:
         assert load_pth_path is not None, "load_path can't be None."
         print(f"Load from {load_pth_path}!!!", flush=True)
         cp = load_model(load_pth_path)
-        pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
-        pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
-        self.model.load_state_dict(pretrain)
+        
+        flag = False
+        for k, v in cp['model'].items():
+            if 'fusion_block' in k:
+                flag = True
+                break
+        
+        if flag:
+            pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+            pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
+            self.model.load_state_dict(pretrain)
+        else:
+            self.model = GetOldModel(self.args).cuda()
+            pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+            pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
+            self.model.load_state_dict(pretrain)
 
     
     def run(self):

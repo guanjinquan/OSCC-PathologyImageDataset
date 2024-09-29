@@ -1,0 +1,8 @@
+from oldmodels.backbones.densenet121_imagenet import Densenet121Imagenet as densenet121_imagenet
+from oldmodels.backbones.resnet_imagenet import ResNetImagenet as resnet_imagenet
+from oldmodels.backbones.swin_imagenet import SwinImageNet as swin_imagenet
+from oldmodels.backbones.vit_small_p16_pathology import VitPathology as vit_small_p16_pathology
+from oldmodels.backbones.vit_base_p16_medcoss import ViTBaseMedCoSS as vit_base_p16_medcoss
+from oldmodels.backbones.vit_base_hibou import VitHibou as vit_base_hibou
+from oldmodels.backbones.vit_base_p16_uni import VitUni as vit_base_p16_uni
+from oldmodels.backbones.vit_base_p16_conch import VitConch as vit_base_p16_conch
