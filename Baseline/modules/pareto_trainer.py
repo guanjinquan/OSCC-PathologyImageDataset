@@ -15,6 +15,7 @@ class ParetoTrainer(Trainer):
         self.normalization_type = "loss+"
         self.grad_backup = {}  # gradients backup for accumulating
         self.tasks = list(self.model.module.tasks.keys()) if self.args.use_ddp else list(self.model.tasks.keys())
+        self.alpha = 0.8  # scale moving average
         self.validation_scale = torch.tensor([1.0 for _ in self.tasks]).to(self.device)
         self.scale_list = [[] for _ in range(len(self.tasks))]
 
@@ -83,7 +84,7 @@ class ParetoTrainer(Trainer):
                     scale = self.calc_pareto_weights(x, y).to(self.device)
                     for j, _ in enumerate(self.tasks):
                         self.scale_list[j].append(scale[j].item())
-                    self.validation_scale += scale
+                    self.validation_scale = self.alpha * self.validation_scale + (1 - self.alpha) * scale
                 
                 self.model.zero_grad()
                 if self.args.use_amp:
