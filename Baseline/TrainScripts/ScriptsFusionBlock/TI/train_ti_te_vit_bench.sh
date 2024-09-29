@@ -1,6 +1,6 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "fusion_TE_004_REC_vit_bench_32cluster" \
-    --gpu_id "1" \
+    --runs_id "fusion_TE_004_TI_vit_bench_32cluster" \
+    --gpu_id "2" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
@@ -12,5 +12,5 @@ python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_trai
     --img_size 512 \
     --num_epochs 400 \
     --model "vit_small_p16_pathology" \
-    --use_tasks "['TE']" \
+    --use_tasks "['TI']" \
     --fusion_block 'transformer_encoder'
