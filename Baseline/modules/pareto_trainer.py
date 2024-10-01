@@ -15,8 +15,10 @@ class ParetoTrainer(Trainer):
         self.normalization_type = "loss+"
         self.grad_backup = {}  # gradients backup for accumulating
         self.tasks = list(self.model.module.tasks.keys()) if self.args.use_ddp else list(self.model.tasks.keys())
-        self.alpha = 0.8  # scale moving average
-        self.validation_scale = torch.tensor([1.0 for _ in self.tasks]).to(self.device)
+
+        self.recalculate_weights_step = 5  # recalculate weights every 5 epochs
+        self.average_scale_list = []
+        self.average_scale = None
         self.scale_list = [[] for _ in range(len(self.tasks))]
 
     def calc_pareto_weights(self, x, y):
@@ -80,11 +82,15 @@ class ParetoTrainer(Trainer):
                     y[k] = v.cuda()
                 p_idxs = p_idxs.cpu().data.numpy()
                 
-                if self.local_rank == 0:
+                if self.epoch % self.recalculate_weights_step == 0:
                     scale = self.calc_pareto_weights(x, y).to(self.device)
-                    for j, _ in enumerate(self.tasks):
-                        self.scale_list[j].append(scale[j].item())
-                    self.validation_scale = self.alpha * self.validation_scale + (1 - self.alpha) * scale
+                    self.average_scale_list.append(scale)  # record the scale for each batch
+                    self.average_scale = None
+                    if self.local_rank == 0:
+                        for j, _ in enumerate(self.tasks):
+                            self.scale_list[j].append(scale[j].item())
+                else:
+                    scale = self.average_scale.clone()
                 
                 self.model.zero_grad()
                 if self.args.use_amp:
@@ -131,8 +137,8 @@ class ParetoTrainer(Trainer):
             pbar.close()
             self.on_loader_exit('train_sample', loss, outs, true)
             
-            # draw the scale
-            if self.local_rank == 0:
+            # draw the scale when epoch % recalculate_weights_step == 0
+            if self.local_rank == 0 and self.epoch % self.recalculate_weights_step == 0:
                 plt.cla()
                 fig, ax = plt.subplots(2, 3)
                 ax = ax.flatten()
@@ -142,6 +148,7 @@ class ParetoTrainer(Trainer):
                     ax[i].plot(X, [1] * len(X), 'r--')  # no label
                     ax[i].legend()
                 plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
+                self.scale_list = [[] for _ in range(len(self.tasks))]
                     
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
@@ -159,8 +166,8 @@ class ParetoTrainer(Trainer):
                 _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                 
-                if self.epoch > 0:
-                    scale = self.validation_scale / self.epoch
+                if (self.epoch > 0) and (self.average_scale is not None):
+                    scale = self.average_scale.clone()
                     weighted_loss = torch.sum(scale * tasks_loss)
                 else:
                     weighted_loss = torch.sum(tasks_loss)
