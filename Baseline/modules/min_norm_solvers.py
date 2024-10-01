@@ -10,7 +10,7 @@ import numpy as np
 
 
 class MinNormSolver:
-    MAX_ITER = 100  # 250 change max_iter to decrease the searching time
+    MAX_ITER = 250
     STOP_CRIT = 1e-5
 
     def _min_norm_element_from2(v1v1, v1v2, v2v2):
