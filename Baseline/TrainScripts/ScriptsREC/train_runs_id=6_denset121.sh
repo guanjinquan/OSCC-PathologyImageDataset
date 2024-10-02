@@ -1,6 +1,6 @@
 python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --runs_id "006_REC_densenet121_imagenet" \
-    --gpu_id "1" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
