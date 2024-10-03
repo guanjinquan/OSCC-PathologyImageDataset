@@ -58,7 +58,6 @@ class VitPathology(nn.Module):
 
 def get_vit_base_pathology(args):
     model = VitPathology(args)
-    print("ViT-Small Params : ", sum(p.numel() for p in model.parameters()) / 1e6, " MB")
     return model, 384
 
 if __name__ == "__main__":

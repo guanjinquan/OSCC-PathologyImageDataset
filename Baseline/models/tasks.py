@@ -71,7 +71,9 @@ class MultiTaskModel(nn.Module):
                 tasks.pop(task_name)
         self.tasks = nn.ModuleDict(tasks)
         
-        print("Params Size:", sum(p.numel() for p in self.parameters()), flush=True)
+        print("Backbone Params Size:", sum(p.numel() for p in self.backbone.parameters()) / 1024 / 1024, "MB", flush=True)
+        print("Fusion Block Params Size:", sum(p.numel() for p in self.fusion_block.parameters()) / 1024 / 1024, "MB", flush=True)
+        print("Total Params Size:", sum(p.numel() for p in self.parameters()) / 1024 / 1024, "MB", flush=True)
     
     def get_backbone_params(self):
         return self.backbone.parameters()
