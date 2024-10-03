@@ -8,7 +8,7 @@ from torch.cuda.amp import autocast
 from modules.trainer import Trainer
 
         
-class ParetoTrainer(Trainer):
+class KeyFusionBlockEveryStepParetoTrainer(Trainer):
     def __init__(self, fold=0, args=None):  
         super().__init__(fold, args)
         
@@ -16,9 +16,6 @@ class ParetoTrainer(Trainer):
         self.grad_backup = {}  # gradients backup for accumulating
         self.tasks = list(self.model.module.tasks.keys()) if self.args.use_ddp else list(self.model.tasks.keys())
 
-        self.recalculate_weights_step = 5  # recalculate weights every 5 epochs
-        self.average_scale_list = []
-        self.average_scale = None
         self.scale_list = [[] for _ in range(len(self.tasks))]
 
     def calc_pareto_weights(self, x, y):
@@ -38,7 +35,7 @@ class ParetoTrainer(Trainer):
             tasks_loss[t].backward(retain_graph=True)  # can't use ddp in pareto because of redudant grads
             
             grads[t] = []
-            key_params = self.model.module.backbone if self.args.use_ddp else self.model.backbone
+            key_params = self.model.module.fusion_block if self.args.use_ddp else self.model.fusion_block
             for name, param in key_params.named_parameters():
                 if param.grad is not None:
                     grads[t].append(torch.autograd.Variable(param.grad.data.clone(), requires_grad=False))
@@ -82,15 +79,10 @@ class ParetoTrainer(Trainer):
                     y[k] = v.cuda()
                 p_idxs = p_idxs.cpu().data.numpy()
                 
-                if self.epoch % self.recalculate_weights_step == 0 or self.average_scale is None:
-                    scale = self.calc_pareto_weights(x, y).to(self.device)
-                    self.average_scale_list.append(scale)  # record the scale for each batch
-                    self.average_scale = None
-                    if self.local_rank == 0:
-                        for j, _ in enumerate(self.tasks):
-                            self.scale_list[j].append(scale[j].item())
-                else:
-                    scale = self.average_scale.clone()
+                scale = self.calc_pareto_weights(x, y).to(self.device)
+                if self.local_rank == 0:
+                    for j, _ in enumerate(self.tasks):
+                        self.scale_list[j].append(scale[j].item())
                 
                 self.model.zero_grad()
                 if self.args.use_amp:
@@ -138,7 +130,7 @@ class ParetoTrainer(Trainer):
             self.on_loader_exit('train_sample', loss, outs, true)
             
             # draw the scale when epoch % recalculate_weights_step == 0
-            if self.local_rank == 0 and (self.epoch % self.recalculate_weights_step == 0 or self.average_scale is None):
+            if self.local_rank == 0:
                 plt.cla()
                 fig, ax = plt.subplots(2, 3)
                 ax = ax.flatten()
@@ -148,10 +140,7 @@ class ParetoTrainer(Trainer):
                     ax[i].plot(X, [1] * len(X), 'r--')  # no label
                     ax[i].legend()
                 plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
-                # average scale
-                self.average_scale = torch.mean(torch.stack(self.average_scale_list), dim=0).to(self.device)
-                self.average_scale_list = []
-                    
+
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
         with torch.no_grad():
@@ -168,11 +157,7 @@ class ParetoTrainer(Trainer):
                 _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                 
-                if (self.epoch > 0) and (self.average_scale is not None):
-                    scale = self.average_scale.clone()
-                    weighted_loss = torch.sum(scale * tasks_loss)
-                else:
-                    weighted_loss = torch.sum(tasks_loss)
+                weighted_loss = torch.sum(tasks_loss)
                 
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
                 for k, v in losses.items():
