@@ -1,4 +1,4 @@
-python /mnt/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --runs_id "007_REC_swin_imagenet" \
     --gpu_id "0" \
     --seed 109 \
