@@ -11,6 +11,11 @@ from modules.trainer import Trainer
 class KeyFusionBlockEveryStepParetoTrainer(Trainer):
     def __init__(self, fold=0, args=None):  
         super().__init__(fold, args)
+        # unsupport ddp in pareto
+        
+        lossfn = torch.nn.CrossEntropyLoss()
+        loss = lossfn(torch.randn(2, 5), torch.randint(0, 5, (2,)))
+        loss.backward()
         
         self.normalization_type = "loss+"
         self.grad_backup = {}  # gradients backup for accumulating
@@ -26,6 +31,7 @@ class KeyFusionBlockEveryStepParetoTrainer(Trainer):
         grads = {}
         
         num_of_task = len(self.tasks)
+        # self.model.backbone.requires_grad_(False)  # this op make it slower. why?
         out = self.model(x)
         _, tasks_loss = self.LossFn(out, y)
        
@@ -50,6 +56,7 @@ class KeyFusionBlockEveryStepParetoTrainer(Trainer):
         for i, t in enumerate(self.model.tasks.keys()):
             scale[t] = float(sol[i])
         
+        # self.model.backbone.requires_grad_(True)
         scale_tensor = torch.tensor([scale[t] for t in self.model.tasks.keys()]).to(self.device)
         return scale_tensor * num_of_task  # (1, 6)
 

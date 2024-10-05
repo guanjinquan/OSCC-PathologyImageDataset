@@ -2,3 +2,8 @@
 [submodule "ExternalLibs/CONCH"]
 	path = ExternalLibs/CONCH
 	url = git@github.com:mahmoodlab/CONCH.git
+
+[submodule "ExternalLibs/torchvahadane"]
+	path = ExternalLibs/torchvahadane
+	url = git@github.com:cwlkr/torchvahadane.git
+

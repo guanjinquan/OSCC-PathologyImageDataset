@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../ExternalLibs/torchvahadane/')
 from torchvahadane import TorchVahadaneNormalizer
 import json
 import numpy as np

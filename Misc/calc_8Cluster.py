@@ -7,11 +7,12 @@ import numpy as np
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__) + "/..")
+    Cluster_NUM = 8
     
     with open("./Data/split_seed=2024.json", 'r') as f:
         pids = json.load(f)['train']
     
-    with open("/Data/all_metadata.json", 'r') as f:
+    with open("./Data/all_metadata.json", 'r') as f:
         info = json.load(f)['datainfo']
         info = [x for x in info if x['pid'] in pids]
     
@@ -38,18 +39,18 @@ if __name__ == "__main__":
     pca.fit(embeds)
     embeds = pca.transform(embeds)
     
-    kmeans = KMeans(n_clusters=32, random_state=2024)
+    kmeans = KMeans(n_clusters=Cluster_NUM, random_state=2024)
     kmeans.fit(embeds)
     labels = kmeans.labels_
     clusters_idx = kmeans.cluster_centers_
     
     # print cluster center pid
     cluster_pid = {}
-    for i in range(32):
+    for i in range(Cluster_NUM):
         cluster_pid[i] = []
     for i, pid in enumerate(pid_ord):
         cluster_pid[labels[i]].append(pid)
     
-    with open("./32Cluster.json", 'w') as f:
+    with open(f"./{Cluster_NUM}Cluster.json", 'w') as f:
         json.dump(cluster_pid, f)
     
