@@ -1,4 +1,4 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_pareto_key_fusionblock.py \
+python /mnt/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_pareto_key_fusionblock.py \
     --runs_id "005_KeyFusionBlock_EveryStepPareto_vit_bench_32cluster" \
     --gpu_id "1" \
     --seed 109 \
