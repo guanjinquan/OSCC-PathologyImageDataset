@@ -31,6 +31,7 @@ class GradNormTrainer(Trainer):
             self.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
         
         self.loss_weight_list = [[] for _ in range(len(eval(self.args.use_tasks)))]
+        self.loss_weight_grad_list = [[] for _ in range(len(eval(self.args.use_tasks)))]
         
     def grad_norm_method(self, task_loss):
         # get layer of shared weights
@@ -127,8 +128,10 @@ class GradNormTrainer(Trainer):
                     self.loss_weights.grad = torch.mean(torch.stack(self.loss_weights_grad), dim=0)
                     
                     # loss weights record
-                    for i, w in enumerate(self.loss_weights.grad):
+                    for i, w in enumerate(self.loss_weights):
                         self.loss_weight_list[i].append(w.item())
+                    for i, w in enumerate(self.loss_weights.grad):
+                        self.loss_weight_grad_list[i].append(w.item())
                     
                     # Loss weights update
                     self.GradNormOptimizer.step()
@@ -161,6 +164,15 @@ class GradNormTrainer(Trainer):
                     ax[i].plot(X, [1] * len(X), 'r--')  # no label
                     ax[i].legend()
                 plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
+                plt.cla()
+                fig, ax = plt.subplots(2, 3)
+                ax = ax.flatten()
+                X = np.arange(len(self.loss_weight_grad_list[0]))
+                for i, w_list in enumerate(self.loss_weight_grad_list):
+                    ax[i].plot(X, w_list, label=f'task_{i}',linewidth = 0.5)
+                    ax[i].plot(X, [1] * len(X), 'r--')  # no label
+                    ax[i].legend()
+                plt.savefig(os.path.join(self.log_path, f'loss_weight_grad.png'))
                             
     def eval_epoch(self, val_loader, mode='valid'):
         self.model.eval()
