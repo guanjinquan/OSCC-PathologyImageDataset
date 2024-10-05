@@ -138,16 +138,17 @@ class ParetoTrainer(Trainer):
             self.on_loader_exit('train_sample', loss, outs, true)
             
             # draw the scale when epoch % recalculate_weights_step == 0
-            if self.local_rank == 0 and (self.epoch % self.recalculate_weights_step == 0 or self.average_scale is None):
-                plt.cla()
-                fig, ax = plt.subplots(2, 3)
-                ax = ax.flatten()
-                X = np.arange(len(self.scale_list[0]))
-                for i, w_list in enumerate(self.scale_list):
-                    ax[i].plot(X, w_list, label=f'task_{i}',linewidth = 0.5)
-                    ax[i].plot(X, [1] * len(X), 'r--')  # no label
-                    ax[i].legend()
-                plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
+            if (self.epoch % self.recalculate_weights_step == 0 or self.average_scale is None):
+                if self.local_rank == 0:
+                    plt.cla()
+                    fig, ax = plt.subplots(2, 3)
+                    ax = ax.flatten()
+                    X = np.arange(len(self.scale_list[0]))
+                    for i, w_list in enumerate(self.scale_list):
+                        ax[i].plot(X, w_list, label=f'task_{i}',linewidth = 0.5)
+                        ax[i].plot(X, [1] * len(X), 'r--')  # no label
+                        ax[i].legend()
+                    plt.savefig(os.path.join(self.log_path, f'loss_weight.png'))
                 # average scale
                 self.average_scale = torch.mean(torch.stack(self.average_scale_list), dim=0).to(self.device)
                 self.average_scale_list = []
