@@ -4,17 +4,16 @@ import numpy as np
 import os
 import random
 import json
-import tqdm
-import multiprocessing as mp
+from PIL import Image
 
 
-
-def norm_data(source_path, pid_result_root, ref_pid, cluster):
+def normalize(source_path, ref_pid, cluster):
     print(f"Processing {source_path} with ref_pid={ref_pid} cluster = {cluster}")
     data = np.load(source_path)
     normalizer_root = "./Data/cuda_normalizers"
     normalizer_dir = os.path.join(normalizer_root, str(ref_pid))
     norm_data = []
+    
     for i in range(data.shape[0]):
         image = data[i, :, :, :]
         image = np.transpose(image, (1, 2, 0)).astype(np.uint8)
@@ -25,18 +24,23 @@ def norm_data(source_path, pid_result_root, ref_pid, cluster):
         image = image.cpu().numpy()
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
         norm_data.append(image)  # [C, H, W]
+        
     norm_data = np.stack(norm_data, axis=0)
-    np.save(os.path.join(pid_result_root, f'ref_pid={ref_pid}.npy'), norm_data)
-                
+    return norm_data
+    
+
+def plot_image(data, save_path):
+    os.makedirs(save_path, exist_ok=True)
+    for i in range(data.shape[0]):
+        img_i = data[i, :, :, :]
+        img_i = np.transpose(img_i, (1, 2, 0)).astype(np.uint8)
+        Image.fromarray(img_i).save(os.path.join(save_path, f"{i}.png"))
+        
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__) + "/..")
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    source_pid = 1093516
     Cluster_NUM = 8
-    
-    # fixed seed
-    random.seed(2024)
-    np.random.seed(2024)
+    os.chdir(os.path.dirname(__file__) + "/..")
     
      # load splits, only train set is used to calculate normalizers
     with open("./Data/split_seed=2024.json", 'r') as f:
@@ -50,22 +54,22 @@ if __name__ == "__main__":
     # load cluster info
     with open(f"./Data/{Cluster_NUM}Cluster.json", 'r') as f:
         cluster_info = json.load(f)
+    
+    # stain normalize for each cluster
+    visualize_temp_root = "./Data/visualize_temp_images"
+    os.makedirs(visualize_temp_root, exist_ok=True)
+    
+    plot_image(np.load(f"./Data/NpyData/{source_pid}.npy"), os.path.join(visualize_temp_root, "source"))
+    
+    for c in range(Cluster_NUM):
+        # random select an normalizer from norm_dir in cluster c
+        while True:
+            ref_pid = random.choice(cluster_info[str(c)])
+            if ref_pid != source_pid:
+                break
         
-    results_root = "./Data/vahadane_images"
-
-    tasks = []
-    for item in info:
-        pid_result_root = os.path.join(results_root, str(item['pid']))
-        os.makedirs(pid_result_root, exist_ok=True)
-        for c in range(Cluster_NUM):
-            # random select an normalizer from norm_dir in cluster c
-            while True:
-                ref_pid = random.choice(cluster_info[str(c)])
-                if ref_pid != item['pid']:
-                    break
-            # set tasks
-            if not os.path.exists(os.path.join(pid_result_root, f'ref_pid={ref_pid}.npy')):
-                tasks.append((item['path'], pid_result_root, ref_pid, c))
-
-    with mp.Pool(8) as p:
-        p.starmap(norm_data, tasks)
+        c_data = normalize(f"./Data/NpyData/{source_pid}.npy", ref_pid, c)
+        plot_image(c_data, os.path.join(visualize_temp_root, f"cluster_{c}"))
+        
+            
+    

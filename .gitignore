@@ -8,6 +8,7 @@ __pycache__/
 Data/NpyData
 Data/cuda_normalizers
 Data/vahadane_images
+Data/visualize_diff_stain_images
 Checkpoints
 Results
 wandb
