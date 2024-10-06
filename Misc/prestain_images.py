@@ -32,7 +32,10 @@ def norm_data(source_path, pid_result_root, ref_pid, cluster):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__) + "/..")
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+<<<<<<< HEAD
     Cluster_NUM = 8
+=======
+>>>>>>> e66b41061b8ef42ff2fe0423e1571e8f0ff43c5c
     
     # fixed seed
     random.seed(2024)
@@ -48,7 +51,11 @@ if __name__ == "__main__":
         info = [x for x in info if x['pid'] in pids]
 
     # load cluster info
+<<<<<<< HEAD
     with open(f"./Data/{Cluster_NUM}Cluster.json", 'r') as f:
+=======
+    with open("./Data/32Cluster.json", 'r') as f:
+>>>>>>> e66b41061b8ef42ff2fe0423e1571e8f0ff43c5c
         cluster_info = json.load(f)
         
     results_root = "./Data/vahadane_images"
@@ -57,7 +64,11 @@ if __name__ == "__main__":
     for item in info:
         pid_result_root = os.path.join(results_root, str(item['pid']))
         os.makedirs(pid_result_root, exist_ok=True)
+<<<<<<< HEAD
         for c in range(Cluster_NUM):
+=======
+        for c in range(32):
+>>>>>>> e66b41061b8ef42ff2fe0423e1571e8f0ff43c5c
             # random select an normalizer from norm_dir in cluster c
             while True:
                 ref_pid = random.choice(cluster_info[str(c)])
