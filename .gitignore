@@ -9,6 +9,8 @@ Data/NpyData
 Data/cuda_normalizers
 Data/vahadane_images
 Data/visualize_diff_stain_images
+Data/vahadane_images_olds
+Data/Normalizers
 Checkpoints
 Results
 wandb
