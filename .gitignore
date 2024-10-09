@@ -6,15 +6,13 @@ __pycache__/
 # data files can't upload
 **/__pycache__
 Data/NpyData
-Data/cuda_normalizers
-Data/vahadane_images
-Data/visualize_diff_stain_images
-Data/vahadane_images_olds
-Data/Normalizers
+Data/CudaNormalizers
+Data/StainNormedData
 Checkpoints
 Results
 wandb
 Baseline/models/backbones/pretrained_weight
+Misc/prestain_log.txt
 
 # C extensions
 *.so

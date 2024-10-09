@@ -7,3 +7,6 @@
 	path = ExternalLibs/torchvahadane
 	url = git@github.com:cwlkr/torchvahadane.git
 
+[submodule "ExternalLibs/torchstain"]
+	path = ExternalLibs/torchstain
+	url = git@github.com:EIDOSLAB/torchstain.git
