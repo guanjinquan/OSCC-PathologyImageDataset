@@ -86,7 +86,7 @@ class MinNormSolver:
         tm2 = (1.0 - cur_val[proj_grad>0])/(proj_grad[proj_grad>0])
         
         skippers = torch.sum(tm1<1e-7) + torch.sum(tm2<1e-7)
-        t = 1
+        t = 1  # calculate the step size
         if len(tm1[tm1>1e-7]) > 0:
             t = torch.min(tm1[tm1>1e-7])
         if len(tm2[tm2>1e-7]) > 0:
@@ -210,6 +210,7 @@ def gradient_normalizers(grads, losses, normalization_type):
 
 
 if __name__ == "__main__":
+    # case-1 : best assets combination 
     # assuming that we have 3 assets and their historical returns vectors (returns in a unit time period)
     returns_asset1 = torch.tensor([0.02, 0.01, -0.01, 0.03, 0.02])  # 资产1的历史收益
     returns_asset2 = torch.tensor([-0.01, 0.03, 0.01, -0.02, 0.01]) # 资产2的历史收益
@@ -238,4 +239,19 @@ if __name__ == "__main__":
     print("2 NORM : ", (asset * asset).sum())
 
     print("The best weight to combine three asset:", weights)
-    print("The min risk:", min_risk)
+    print("The min risk:", min_risk)  # low risk [3.28e-9]
+    
+    # case-2 : min-norm vector in 2D
+    vec1 = torch.tensor([1, 1])
+    vec2 = torch.tensor([-1, 1])
+    vec3 =  torch.tensor([-1, -1]) 
+    vec4 = torch.tensor([1, -1])
+    
+    vectors = [vec1, vec2, vec3, vec4]
+    weights, min_norm = MinNormSolver.find_min_norm_element(vectors)
+    
+    weighted_vector = weights[0] * vec1 + weights[1] * vec2 + weights[2] * vec3 + weights[3] * vec4
+    print("Weighted Vector : ", weighted_vector)  # [0, 0]
+    print("The best weight to combine four vectors:", weights)
+    print("The min norm:", min_norm)
+    

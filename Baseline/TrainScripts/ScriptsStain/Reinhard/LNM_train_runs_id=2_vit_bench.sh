@@ -1,6 +1,6 @@
 python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --runs_id "reinhard_002_LNM_vit_bench_32cluster" \
-    --gpu_id "1" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
