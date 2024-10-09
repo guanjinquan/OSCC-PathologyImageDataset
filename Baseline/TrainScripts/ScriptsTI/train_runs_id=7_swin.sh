@@ -11,6 +11,6 @@ python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
     --optimizer "AdamW" \
-    --num_epochs 200 \
+    --num_epochs 400 \
     --model "swin_imagenet" \
     --use_tasks "['TI']"

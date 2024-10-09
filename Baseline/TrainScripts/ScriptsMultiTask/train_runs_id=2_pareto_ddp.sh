@@ -14,7 +14,7 @@ python3 -m torch.distributed.launch \
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
-    --num_epochs 200 \
+    --num_epochs 400 \
     --model "vit_small_p16_pathology" \
     --use_tasks "['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']" \
     --use_ddp True \

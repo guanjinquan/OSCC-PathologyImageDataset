@@ -70,7 +70,7 @@ class Trainer:
             
         # early stop
         self.loss_history = []
-        self.patience = self.args.num_epochs // 2
+        self.patience = 150
         self.monitor_length = 20  # monitor the last 20 epochs
         
         # amp

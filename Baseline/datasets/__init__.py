@@ -2,7 +2,7 @@ from utils.config import parse_arguments
 from datasets.data_utils import *
 from torch.utils.data import DataLoader
 from datasets.default import *
-from datasets.vahadane import *
+from datasets.stain import *
 from datasets.data_sampler import BalancedBatchSampler, DistributedBalancedBatchSampler
 
 
@@ -63,10 +63,12 @@ def GetCVDataLoader(fold, mean_std=None, args=None, test_mode=False):
 
 def GetDataset(currentfold=0, type="train", data_type="ALL", mean_std=None, test_mode=False, args=None):
     assert args is not None, "Please provide args!"
-    if args.augment_method == "vahadane":
-        print("Using VahadaneDataset!")
-        return VahadaneDataset(currentfold, type, data_type, mean_std, test_mode, args)
+    # stain dataset when passing augment method
+    if args.augment_method is not None:
+        assert args.augment_method in ['macenko', 'reinhard', 'vahadane']
+        print(f"Using Stain Dataset method = {args.augment_method}!")
+        return StainDataset(args.augment_method, currentfold, type, data_type, mean_std, test_mode, args)
     else:
-        print("Using VanillaDataset!")
+        print("Using Default Dataset!")
         return MyBaseDataset(currentfold, type, data_type, mean_std, test_mode, args)
 

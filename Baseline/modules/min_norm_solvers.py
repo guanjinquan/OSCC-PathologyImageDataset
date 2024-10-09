@@ -210,33 +210,32 @@ def gradient_normalizers(grads, losses, normalization_type):
 
 
 if __name__ == "__main__":
-    # 假设我们有3个资产，它们的历史收益向量（单位时间内的回报率）
+    # assuming that we have 3 assets and their historical returns vectors (returns in a unit time period)
     returns_asset1 = torch.tensor([0.02, 0.01, -0.01, 0.03, 0.02])  # 资产1的历史收益
     returns_asset2 = torch.tensor([-0.01, 0.03, 0.01, -0.02, 0.01]) # 资产2的历史收益
     returns_asset3 = torch.tensor([0.01, 0.02, 0.01, 0.00, -0.01])  # 资产3的历史收益
 
-    # 计算协方差矩阵（用作风险度量的一部分）
+    # calculate the covariance matrix (used as part of the risk measure)
     cov_matrix = torch.cov(torch.stack([returns_asset1, returns_asset2, returns_asset3]))
 
-    # 构造每个资产的风险向量（即每个资产的协方差向量）
+    # construct the risk vectors for each asset (i.e., the covariance vectors for each asset
     risk_asset1 = cov_matrix[0]  # 资产1的协方差
     risk_asset2 = cov_matrix[1]  # 资产2的协方差
     risk_asset3 = cov_matrix[2]  # 资产3的协方差
     
-    print("风险向量:")
+    print("Risk vector:")
     print(risk_asset1)
     print(risk_asset2)
     print(risk_asset3)
     
-
-    # 将这些风险向量作为输入，使用 MinNormSolver 来找到最优的投资组合权重，使组合风险最小
+    # the risk vectors for the three assets
     risks = [risk_asset1, risk_asset2, risk_asset3]
 
-    # 使用 MinNormSolver 来找到最小风险的投资组合权重
+    # find the minimum risk investment portfolio weights using MinNormSolver
     weights, min_risk = MinNormSolver.find_min_norm_element(risks)
 
     asset = weights[0] * risk_asset1 + weights[1] * risk_asset2 + weights[2] * risk_asset3
     print("2 NORM : ", (asset * asset).sum())
 
-    print("最优投资组合权重:", weights)
-    print("最小风险值:", min_risk)
+    print("The best weight to combine three asset:", weights)
+    print("The min risk:", min_risk)

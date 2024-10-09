@@ -3,18 +3,19 @@ import numpy as np
 import random
 import os
 import torch
-from datasets.vahadane import vahadane_augment
+from datasets.stain import stain_augment
 import pickle as pkl
 
-class VahadaneDataset(MyBaseDataset):
-    def __init__(self, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=None, args=None):
+
+class StainDataset(MyBaseDataset):
+    def __init__(self, stain_method, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=None, args=None):
         super().__init__(fold, type, data_type, mean_std, test_mode, args)
         self.transforms = \
-            vahadane_augment.TestTransforms(mean_std) if test_mode \
-            else vahadane_augment.TrainTransforms(mean_std, args) 
-            
-        # load normalizers 
-        self.vahadane_dir = "./Data/vahadane_images"
+            stain_augment.TestTransforms(mean_std) if test_mode \
+            else stain_augment.TrainTransforms(mean_std, args) 
+
+        self.stain_dir = "./Data/StainNormedData"
+        self.stain_method = stain_method
         
 
     def __getitem__(self, index):
@@ -28,7 +29,7 @@ class VahadaneDataset(MyBaseDataset):
         elif self.data_type == "EDGE":
             image = image[3:6]  # 只取后三张
         
-        pat_dir = os.path.join(self.vahadane_dir, str(self.items[index]['pid']))
+        pat_dir = os.path.join(self.stain_dir, self.stain_method, str(self.items[index]['pid']))
         path_exist = os.path.exists(pat_dir)
         if self.type == 'train' and np.random.rand() < self.args.stain_prob and path_exist:  # 0.5 prob to use stain
             norm_img = np.random.choice(os.listdir(pat_dir))

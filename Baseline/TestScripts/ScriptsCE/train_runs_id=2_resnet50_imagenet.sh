@@ -10,6 +10,6 @@ python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
-    --num_epochs 200 \
+    --num_epochs 400 \
     --model "resnet50_imagenet" \
     --use_tasks "['CE']"

@@ -1,0 +1,3 @@
+from datasets.stain.stain_dataset import StainDataset
+from datasets.stain.stain_augment import TrainTransforms as StainTrainTransforms
+from datasets.stain.stain_augment import TestTransforms as StainTestTransforms
