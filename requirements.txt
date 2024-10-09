@@ -80,5 +80,3 @@ huggingface_hub==0.16.4
 kornia==0.7.3
 opencv_python==4.10.0.84
 opencv_python_headless==4.10.0.84
-spams==2.6.5.4
-packaging==24.1
