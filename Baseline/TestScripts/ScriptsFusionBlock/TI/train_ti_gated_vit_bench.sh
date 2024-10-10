@@ -1,6 +1,6 @@
 python /mnt/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
     --runs_id "fusion_gated_002_TI_vit_bench_32cluster" \
-    --gpu_id "1" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \

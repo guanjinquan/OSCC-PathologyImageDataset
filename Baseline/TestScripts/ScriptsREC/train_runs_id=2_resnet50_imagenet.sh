@@ -1,5 +1,5 @@
 python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_test.py \
-    --runs_id "003_REC_resnet50_imagenet" \
+    --runs_id "002_REC_resnet50_imagenet" \
     --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \

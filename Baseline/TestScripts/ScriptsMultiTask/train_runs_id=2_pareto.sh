@@ -1,4 +1,4 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test_pareto.py \
     --runs_id "002_Pareto_vit_bench_32cluster" \
     --gpu_id "0" \
     --seed 109 \
