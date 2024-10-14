@@ -2,12 +2,39 @@ from datasets import GetDataLoader
 from models import GetModel
 from oldmodels import GetModel as GetOldModel
 from utils import load_model, parse_arguments
+from sklearn.metrics import roc_auc_score
 import numpy as np
 from utils.config import parse_arguments
 import torch
 import random
 import os
 import json
+
+
+def bootstrap_auc(labels, probs, num_classes, bootstraps = 100, fold_size = 200):
+    statistics = np.zeros((num_classes, bootstraps))
+
+    for c in range(num_classes):
+        pos_probs = probs[np.where(labels == c), c].reshape(-1)
+        neg_probs = probs[np.where(labels != c), c].reshape(-1)
+        prevalence = len(pos_probs) / len(labels)
+        for i in range(bootstraps):
+            pos_sample = np.random.choice(pos_probs, int(fold_size * prevalence), replace=True)
+            neg_sample = np.random.choice(neg_probs, int(fold_size * (1-prevalence)), replace=True)
+
+            labels_sample = np.concatenate([np.ones(len(pos_sample)), np.zeros(len(neg_sample))])
+            probs_sample = np.concatenate([pos_sample, neg_sample])
+            score = roc_auc_score(labels_sample, probs_sample)
+            statistics[c][i] = score
+    return statistics
+
+def roc_auc_confidence_interval(statistics, alpha = 0.95):
+    lower = (1 - alpha) / 2
+    upper = alpha + lower
+    lower_bound = np.quantile(statistics, lower, axis = 0)
+    upper_bound = np.quantile(statistics, upper, axis = 0)
+    return lower_bound, upper_bound
+
 
 class Tester:
     def __init__(self, fold=0, args=None):  
@@ -96,7 +123,14 @@ class Tester:
             for k, metrics in all_metrics.items():
                 for m, a in metrics.items():
                     metrics_dict[f"{m}_{k}_{mode}"] = a
-            
+                num_classes = len(set(true[k]))
+                probs = np.array(outs[k])
+                labels = np.array(true[k])
+                statistics = bootstrap_auc(labels, probs, num_classes)
+                metrics_dict[f"95AUC_CI_{k}_{mode}"] = np.mean([
+                    roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
+                ], axis=0)
+                
             print(f"{mode} : {loss_dict}")
             print(f'metrics : ' + str(metrics_dict))
             return {"pids": pids, "outs": outs, "true": true}
@@ -138,5 +172,3 @@ if __name__ == '__main__':
                     error_ids[iter_fold].append(valid_res['pids'][i])
         with open(f"error_ids_{task}.json", 'w') as f:
             json.dump(error_ids, f)
-    
-    
