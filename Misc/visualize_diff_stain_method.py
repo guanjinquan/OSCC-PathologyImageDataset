@@ -125,7 +125,7 @@ if __name__ == "__main__":
     for i in range(6):
         axs[i, 1].imshow(np.transpose(target_img[i, :, :, :], (1, 2, 0)).astype(np.uint8))
         axs[i, 1].axis('off')
-    axs[0, 1].set_title('Source')
+    axs[0, 1].set_title('Reference')
     
     for i, method in enumerate(['macenko', 'vahadane', 'reinhard'], start=2):
         source_img_normalized = normalizer(method, source_img, target_img)
