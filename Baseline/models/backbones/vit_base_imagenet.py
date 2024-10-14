@@ -1,27 +1,32 @@
 import torch.nn as nn
 import os
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'  # 设置镜像源
-from torchvision.models import vit_b_16
+from timm.models.vision_transformer import vit_base_patch16_224, resize_pos_embed, VisionTransformer
+# from torchvision.models import vit_b_16   # can't adjust model into 512x512 size input
 import torch
+
+
+def get_vit(args):
+    # vit_base_patch32_224
+    pretrain_model = vit_base_patch16_224(pretrained=True).state_dict()
+    
+    model = VisionTransformer(  # 512 / 16 = 32 -> 32 * 32 patches
+        img_size=args.img_size, patch_size=16, embed_dim=768, depth=12, num_heads=12
+    )
+    
+    pretrain_model['pos_embed'] = resize_pos_embed(pretrain_model['pos_embed'], model.pos_embed)
+    model.load_state_dict(pretrain_model)
+    
+    model.head = nn.Identity()
+    return model
+
 
 class ViTBaseImagenet(nn.Module):
     
     def __init__(self, args):
         super(ViTBaseImagenet, self).__init__()
-        
-        self.extractor = vit_b_16(pretrained=True)
-        self.extractor.heads = nn.Identity()
-        self.extractor.classifier = nn.Identity()
-        
-        params_sum = sum([param.nelement() for param in self.extractor.parameters()])
+        self.extractor = get_vit(args)
          
-    def get_backbone_params(self):
-        return list(self.extractor.parameters())
-
-    def get_others_params(self):
-        backbones = set(self.get_backbone_params())
-        return [p for p in self.parameters() if p not in backbones]
-        
     def forward(self, x):
         x = self.extractor(x)
         return x
@@ -33,6 +38,10 @@ def get_vit_base_imagenet(args):
 
 
 if __name__ == '__main__':
-    model = ViTBaseImagenet(None).cuda()
+    # print(vit_base_patch16_224(pretrained=True))
+    class Args:
+        img_size = 512
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    model = ViTBaseImagenet(Args()).cuda()
     print(model)
-    print(model(torch.randn(1, 3, 224, 224).cuda()).shape)
+    print(model(torch.randn(1, 3, 512, 512).cuda()).shape)

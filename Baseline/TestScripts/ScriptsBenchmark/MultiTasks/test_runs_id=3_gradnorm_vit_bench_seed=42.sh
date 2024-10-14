@@ -1,6 +1,6 @@
 python ./Baseline/main_test.py \
     --runs_id "003_Pareto_vit_bench_seed=42" \
-    --gpu_id "0" \
+    --gpu_id "1" \
     --seed 42 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
