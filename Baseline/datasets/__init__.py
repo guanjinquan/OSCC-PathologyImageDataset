@@ -21,16 +21,20 @@ def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):
     valid_set = GetDataset(0, "valid", args.data_type, mean_std, True, args)
     test_set = GetDataset(0, "test", args.data_type, mean_std, True, args)
     
-    if args.use_ddp:
-        num_gpus = torch.cuda.device_count()
-        assert args.batch_size % num_gpus == 0, "Batch size should be divisible by number of GPUs"
-        train_loader = DataLoader(train_set, batch_size=args.batch_size // num_gpus,
-            sampler=DistributedBalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
-        print("Using DDP with batch size: ", args.batch_size // num_gpus)
+    if test_mode:
+        train_loader = DataLoader(train_set, batch_size=args.batch_size,
+            num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
     else:
-        train_loader = DataLoader(train_set, batch_size=args.batch_size, 
-            sampler=BalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
-        print("Using batch size: ", args.batch_size)
+        if args.use_ddp:
+            num_gpus = torch.cuda.device_count()
+            assert args.batch_size % num_gpus == 0, "Batch size should be divisible by number of GPUs"
+            train_loader = DataLoader(train_set, batch_size=args.batch_size // num_gpus,
+                sampler=DistributedBalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
+            print("Using DDP with batch size: ", args.batch_size // num_gpus)
+        else:
+            train_loader = DataLoader(train_set, batch_size=args.batch_size, 
+                sampler=BalancedBatchSampler(train_set), num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
+            print("Using batch size: ", args.batch_size)
     valid_loader = DataLoader(valid_set, batch_size=args.batch_size,
         num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
     test_loader = DataLoader(test_set, batch_size=args.batch_size,

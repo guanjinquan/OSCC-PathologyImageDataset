@@ -36,3 +36,12 @@ def get_swin_imageNet(args):
     model.patch_embed.img_size = None
 
     return model, 1024
+
+
+
+
+if __name__ == "__main__":
+    class Args:
+        img_size = 512
+    model = get_swin_imageNet(Args())[0]
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")
