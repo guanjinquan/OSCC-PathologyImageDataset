@@ -1,5 +1,5 @@
-python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "macenko_002_LNM_vit_bench_32cluster" \
+python  ./Baseline/main_train.py \
+    --runs_id "macenko_002_LNM_vit_bench" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \

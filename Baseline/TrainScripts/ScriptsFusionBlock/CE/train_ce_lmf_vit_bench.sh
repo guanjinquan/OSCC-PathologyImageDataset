@@ -1,6 +1,6 @@
 # tmux 1
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "fusion_LMF_003_CE_vit_bench_32cluster" \
+python ./Baseline/main_train.py \
+    --runs_id "fusion_LMF_003_CE_vit_bench" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \

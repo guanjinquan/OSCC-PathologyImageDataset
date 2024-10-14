@@ -1,5 +1,5 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "continue_fusion_gated_002_TD_vit_bench_32cluster" \
+python ./Baseline/main_train.py \
+    --runs_id "continue_fusion_gated_002_TD_vit_bench" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
@@ -14,5 +14,5 @@ python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
     --model "vit_small_p16_pathology" \
     --use_tasks "['TD']" \
     --fusion_block 'gated' \
-    --load_pth_path "./Checkpoints/vit_small_p16_pathology/fusion_gated_002_TD_vit_bench_32cluster/Final_Trainer.pkl" \
+    --load_pth_path "./Checkpoints/vit_small_p16_pathology/fusion_gated_002_TD_vit_bench/Final_Trainer.pkl" \
     --continue_training True

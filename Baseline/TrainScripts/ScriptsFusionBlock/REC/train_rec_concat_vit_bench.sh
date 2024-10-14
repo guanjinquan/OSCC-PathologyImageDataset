@@ -1,5 +1,5 @@
-python /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "fusion_concat_001_REC_vit_bench_32cluster" \
+python ./Baseline/main_train.py \
+    --runs_id "fusion_concat_001_REC_vit_bench" \
     --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \

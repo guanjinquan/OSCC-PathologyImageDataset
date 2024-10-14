@@ -1,5 +1,5 @@
-python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train_grad_norm.py \
-    --runs_id "001_GradNorm_vit_bench_32cluster" \
+python ./Baseline/main_train_grad_norm.py \
+    --runs_id "001_GradNorm_vit_bench" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \

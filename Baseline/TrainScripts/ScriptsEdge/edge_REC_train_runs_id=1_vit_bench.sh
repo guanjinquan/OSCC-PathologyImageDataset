@@ -1,5 +1,5 @@
-python  /mnt/home/Guanjq/BackupWork/OSCC-PathologyImageDataset/Baseline/main_train.py \
-    --runs_id "EDGE_001_REC_vit_bench_32cluster" \
+python  ./Baseline/main_train.py \
+    --runs_id "EDGE_001_REC_vit_bench" \
     --gpu_id "3" \
     --seed 109 \
     --weight_decay 6e-5 \
