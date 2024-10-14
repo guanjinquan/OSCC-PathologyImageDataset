@@ -38,8 +38,6 @@ def get_swin_imageNet(args):
     return model, 1024
 
 
-
-
 if __name__ == "__main__":
     class Args:
         img_size = 512

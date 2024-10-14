@@ -17,9 +17,8 @@ class ConcatBlock(nn.Module):
             nn.LayerNorm(self.out_dim), 
             nn.ReLU(),
         )
-        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024), " MB")
-        
-        
+        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024) * 4, " MB")
+
     def forward(self, x):
         # x.shape = (batch_size * num_feat, in_dim)
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
@@ -54,7 +53,7 @@ class LowRankFusionBlock(nn.Module):
             nn.ReLU(),
             nn.Linear(self.out_dim, self.out_dim),  
         )
-        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024), " MB")
+        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024) * 4, " MB")
     
     def forward(self, x):
         device = x.device
@@ -94,7 +93,7 @@ class GatedFusionBLock(nn.Module):
         self.out_dim = out_dim
         
         self.transition = nn.Linear(self.in_dim, self.out_dim)
-        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024), " MB")
+        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024) * 4, " MB")
         
     def forward(self, x):
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
@@ -135,7 +134,7 @@ class MSAFusionBlock(nn.Module):
                 attention_dropout = 0,
             ) for _ in range(self.layers_num)]
         )
-        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024), " MB")
+        print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024) * 4, " MB")
         
     def forward(self, x):
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
@@ -153,27 +152,25 @@ class MSAFusionBlock(nn.Module):
     
     
 if __name__ == "__main__":
-    input = torch.randn(24, 768).cuda()
+    # [1 * 6, 384]
+    input = torch.randn(6, 384).cuda()
     
     # concat
-    model = ConcatBlock(3, 768, 768).cuda()
+    print("Working on ConcatBlock")
+    model = ConcatBlock(6, 384, 768).cuda()
     out = model(input)
-    print(out.shape)
     
     # low-rank fusion
-    model = LowRankFusionBlock(3, 768, 768).cuda()
+    print("Working on LowRankFusionBlock")
+    model = LowRankFusionBlock(6, 384, 768).cuda()
     out = model(input)
-    print(out.shape)
     
     # gated-fusion
-    input = torch.randn(24, 384).cuda()
-    model = GatedFusionBLock(3, 384, 768).cuda()
+    print("Working on GatedFusionBLock")
+    model = GatedFusionBLock(6, 384, 768).cuda()
     out = model(input)
-    print(out.shape)
     
     # self-attention fusion
-    model = MSAFusionBlock(3, 384, 768).cuda()
+    print("Working on MSAFusionBlock")
+    model = MSAFusionBlock(6, 384, 768).cuda()
     out = model(input)
-    print(out.shape)
-        
-    

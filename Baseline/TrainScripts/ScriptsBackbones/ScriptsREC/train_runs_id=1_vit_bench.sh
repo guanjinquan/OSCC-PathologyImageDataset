@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream:Baseline/TrainScripts/ScriptsBackbones/ScriptsREC/train_runs_id=1_vit_bench.sh
 python ./Baseline/main_train.py \
     --runs_id "001_REC_vit_bench" \
+=======
+python /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_test.py \
+    --runs_id "001_REC_vit_bench_32cluster" \
+>>>>>>> Stashed changes:Baseline/TestScripts/ScriptsREC/train_runs_id=1_vit_bench.sh
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \

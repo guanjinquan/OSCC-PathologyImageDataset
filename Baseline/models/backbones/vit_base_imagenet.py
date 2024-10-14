@@ -14,7 +14,6 @@ class ViTBaseImagenet(nn.Module):
         self.extractor.classifier = nn.Identity()
         
         params_sum = sum([param.nelement() for param in self.extractor.parameters()])
-        print(f"extractor size: {params_sum / 1e6}Mb")
          
     def get_backbone_params(self):
         return list(self.extractor.parameters())

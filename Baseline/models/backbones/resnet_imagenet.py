@@ -25,7 +25,7 @@ class ResNetImagenet(nn.Module):
             
         self.extractor.fc = nn.Identity()
         params_sum = sum([param.nelement() for param in self.extractor.parameters()])
-        print(f"extractor size: {params_sum / 1e6}Mb")
+
 
     def get_backbone_params(self):
         return list(self.extractor.parameters())
@@ -42,3 +42,9 @@ class ResNetImagenet(nn.Module):
 def get_resnet_imagenet(args, layers):
     model = ResNetImagenet(args, layers)
     return model, model.embed_dim
+
+if __name__ == "__main__":
+    class Args:
+        img_size = 512
+    model = get_resnet_imagenet(Args(), 50)[0]
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")

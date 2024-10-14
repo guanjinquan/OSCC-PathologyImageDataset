@@ -13,7 +13,6 @@ class Densenet121Imagenet(nn.Module):
         self.extractor.classifier = nn.Identity()
         
         params_sum = sum([param.nelement() for param in self.extractor.parameters()])
-        print(f"extractor size: {params_sum / 1e6}Mb")
          
     def get_backbone_params(self):
         return list(self.extractor.parameters())
@@ -30,3 +29,8 @@ class Densenet121Imagenet(nn.Module):
 def get_densenet121_imagenet(args):
     model = Densenet121Imagenet(args)
     return model, 1024
+
+
+if __name__ == "__main__":
+    model = Densenet121Imagenet(None)
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")

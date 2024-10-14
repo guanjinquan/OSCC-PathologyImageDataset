@@ -1,6 +1,12 @@
+<<<<<<< Updated upstream
 python  ./Baseline/main_train.py \
     --runs_id "reinhard_006_PI_vit_bench" \
     --gpu_id "0" \
+=======
+python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+    --runs_id "reinhard_006_PI_vit_bench_32cluster" \
+    --gpu_id "1" \
+>>>>>>> Stashed changes
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \

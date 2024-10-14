@@ -45,3 +45,12 @@ class VitHibou(nn.Module):
 def get_vit_base_hibou(args):
     model = VitHibou(args)
     return model, 768
+
+
+if __name__ == "__main__":
+    os.chdir(os.path.join(os.path.dirname(__file__), '..', '..', ".."))
+    class Args:
+        model = "vit_base_hibou_p16"
+        img_size = 512
+    model = get_vit_base_hibou(Args())[0]
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")

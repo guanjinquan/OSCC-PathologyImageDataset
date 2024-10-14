@@ -26,3 +26,11 @@ class VitConch(nn.Module):
 def get_vit_base_conch(args):
     model = VitConch(args)
     return model, 512
+
+
+if __name__ == "__main__":
+    os.chdir(os.path.join(os.path.dirname(__file__), '..', '..', ".."))
+    class Args:
+        img_size = 512
+    model = get_vit_base_conch(Args())[0]
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")

@@ -63,4 +63,5 @@ def get_vit_base_pathology(args):
 if __name__ == "__main__":
     class Args:
         img_size = 512
-    get_vit_base_pathology(Args())
+    model = get_vit_base_pathology(Args())[0]
+    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")
