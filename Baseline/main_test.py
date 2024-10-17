@@ -132,7 +132,7 @@ class Tester:
                 ], axis=0), 4)))
                 temp_key0 = f"AUC_{k}_{mode}"
                 temp_key1 = f"95AUC_CI_{k}_{mode}"
-                metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} // {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
+                metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} \\ {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
                 
             print(f"{mode} : {loss_dict}")
             print(f'metrics : ' + str(metrics_dict))
