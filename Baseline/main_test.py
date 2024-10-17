@@ -127,9 +127,12 @@ class Tester:
                 probs = np.array(outs[k])
                 labels = np.array(true[k])
                 statistics = bootstrap_auc(labels, probs, num_classes)
-                metrics_dict[f"95AUC_CI_{k}_{mode}"] = np.mean([
+                metrics_dict[f"95AUC_CI_{k}_{mode}"] = tuple(list(np.round(np.mean([
                     roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
-                ], axis=0)
+                ], axis=0), 4)))
+                temp_key0 = f"AUC_{k}_{mode}"
+                temp_key1 = f"95AUC_CI_{k}_{mode}"
+                metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} // {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
                 
             print(f"{mode} : {loss_dict}")
             print(f'metrics : ' + str(metrics_dict))

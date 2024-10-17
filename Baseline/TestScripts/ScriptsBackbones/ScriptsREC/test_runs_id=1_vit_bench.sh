@@ -1,5 +1,5 @@
 python ./Baseline/main_test.py \
-    --runs_id "001_REC_vit_bench" \
+    --runs_id "006_REC_vit_bench" \
     --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
