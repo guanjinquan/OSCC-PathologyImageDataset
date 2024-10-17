@@ -1,5 +1,4 @@
 python ./Baseline/main_test.py \
-python ./Baseline/main_train.py \
     --runs_id "fusion_LMF_003_CE_vit_bench" \
     --gpu_id "1" \
     --seed 109 \

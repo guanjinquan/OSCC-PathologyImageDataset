@@ -1,4 +1,3 @@
-# tmux 1
 python ./Baseline/main_train.py \
     --runs_id "fusion_LMF_003_CE_vit_bench" \
     --gpu_id "1" \

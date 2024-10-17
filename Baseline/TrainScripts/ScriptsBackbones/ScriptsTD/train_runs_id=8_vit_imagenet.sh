@@ -1,6 +1,6 @@
 python ./Baseline/main_train.py \
     --runs_id "008_TD_vit_base_imagenet" \
-    --gpu_id "0" \
+    --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
