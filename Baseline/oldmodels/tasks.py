@@ -146,10 +146,10 @@ class RecTask(nn.Module):
         pred = [1 if p >= 0.5 else 0 for p in probs]
         return {
             'Acc': accuracy_score(target, pred),
-            'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'AUC': roc_auc_score(target, probs),  # auc default average='macro'
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': confusion_matrix(target, pred)
         }
     
