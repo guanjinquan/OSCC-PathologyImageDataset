@@ -39,7 +39,7 @@ def roc_auc_confidence_interval(statistics, alpha = 0.95):
     return lower_bound, upper_bound
 
 
-def bootstrap_CI(func_method, labels, preds, num_classes, macro=False, bootstraps = 500, fold_size = 200):
+def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500, fold_size = 200):
     state = np.random.get_state()
     np.random.seed(2024)  # for reproducibility
     statistics = np.zeros((1, bootstraps))
@@ -56,7 +56,7 @@ def bootstrap_CI(func_method, labels, preds, num_classes, macro=False, bootstrap
             temp_preds = np.random.choice(sample[c], int(np.ceil(len(sample[c]) / len(labels) * fold_size)), replace=True)
             sample_labels += [c] * len(temp_preds)
             sample_preds += temp_preds.tolist()
-        if macro:
+        if num_classes > 2:
             score = func_method(sample_labels, sample_preds, average='macro')
         else:
             score = func_method(sample_labels, sample_preds)
@@ -178,7 +178,7 @@ class Tester:
                                 roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
                             ], axis=0), 4)))
                         else:
-                            statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes, macro=m!='Acc')
+                            statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes)
                             metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(
                                 np.round(confidence_interval(statistics[0]), 4)
                             ))
