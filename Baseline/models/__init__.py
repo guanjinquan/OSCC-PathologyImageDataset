@@ -1,5 +1,5 @@
 from models.backbones import *
-from models.tasks import MultiTaskModel, metrics
+from models.tasks import MultiTaskModel
 from models.fusion_blocks import *
 
 def GetModel(args):

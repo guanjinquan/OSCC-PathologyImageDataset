@@ -1,5 +1,5 @@
 from oldmodels.backbones import *
-from oldmodels.tasks import MultiTaskModel, metrics
+from oldmodels.tasks import MultiTaskModel
 
 def GetModel(args):
     if args.model == 'resnet50_imagenet':

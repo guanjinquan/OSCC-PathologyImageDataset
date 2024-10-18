@@ -11,11 +11,14 @@ import os
 import json
 
 
-def bootstrap_auc(labels, probs, num_classes, bootstraps = 500, fold_size = 200):
+def bootstrap_auc(labels, probs, num_classes, bootstraps = 500):
     state = np.random.get_state()
     np.random.seed(2024)  # for reproducibility
     statistics = np.zeros((num_classes, bootstraps))
-
+    labels = np.array(labels)
+    probs = np.array(probs)
+    fold_size = labels.shape[0]
+    print("fold_size = ", fold_size)
     for c in range(num_classes):
         pos_probs = probs[np.where(labels == c), c].reshape(-1)
         neg_probs = probs[np.where(labels != c), c].reshape(-1)
@@ -39,13 +42,15 @@ def roc_auc_confidence_interval(statistics, alpha = 0.95):
     return lower_bound, upper_bound
 
 
-def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500, fold_size = 200):
+def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500):
     state = np.random.get_state()
     np.random.seed(2024)  # for reproducibility
     statistics = np.zeros((1, bootstraps))
     
+    labels = np.array(labels)
+    preds = np.array(preds)
     sample = [[] for _ in range(num_classes)]
-    for i in range(len(labels)):
+    for i in range(labels.shape[0]):
         sample[labels[i]].append(preds[i])
         
     for i in range(bootstraps):
@@ -53,16 +58,18 @@ def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500, fold
         sample_preds = []
         sample_labels = []
         for c in range(num_classes):
-            temp_preds = np.random.choice(sample[c], int(np.ceil(len(sample[c]) / len(labels) * fold_size)), replace=True)
+            temp_preds = np.random.choice(sample[c], len(sample[c]), replace=True)
             sample_labels += [c] * len(temp_preds)
             sample_preds += temp_preds.tolist()
-        if num_classes > 2:
+        if (num_classes > 2 and func_method.__name__ != 'accuracy_score'):
             score = func_method(sample_labels, sample_preds, average='macro')
         else:
             score = func_method(sample_labels, sample_preds)
         statistics[0][i] = score
     
     np.random.set_state(state)
+    print("name : ", func_method.__name__, max(statistics[0]), func_method(labels, preds), "???", np.sum(preds))
+    assert max(statistics[0]) >= func_method(labels, preds), "The maximum value of statistics should be larger than the original value."
     return statistics
 
 def confidence_interval(statistics, alpha = 0.95):
@@ -165,9 +172,9 @@ class Tester:
                 "Recall": recall_score
             }
             for k, metrics in all_metrics.items():
-                probs = np.array(outs[k])
+                probs = torch.softmax(torch.tensor(outs[k]), dim=1).numpy()
                 preds = np.argmax(probs, axis=1).astype(np.int32)
-                labels = np.array(true[k])
+                labels = true[k]
                 num_classes = len(set(true[k]))
                 for m, a in metrics.items():
                     metrics_dict[f"{m}_{k}_{mode}"] = a
@@ -182,6 +189,8 @@ class Tester:
                             metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(
                                 np.round(confidence_interval(statistics[0]), 4)
                             ))
+                            
+                print(self.model.tasks[k].metrics(torch.tensor(outs[k]), true[k]))
                     
                 # statistics = bootstrap_auc(labels, probs, num_classes)
                 # metrics_dict[f"95AUC_CI_{k}_{mode}"] = tuple(list(np.round(np.mean([

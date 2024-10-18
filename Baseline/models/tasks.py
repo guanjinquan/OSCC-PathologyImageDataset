@@ -12,20 +12,6 @@ import torch.nn.functional as F
 # loss_weight : str
 # use_tasks : str 
 
-def metrics(out, target):
-    probs = torch.softmax(torch.tensor(out), dim=1).detach().numpy()
-    probs = probs[:, 1]  # 只取正类概率 
-    pred = [1 if p >= 0.5 else 0 for p in probs]
-    return {
-        'Acc': accuracy_score(target, pred),
-        'AUC': roc_auc_score(target, probs),
-        'F1': f1_score(target, pred),
-        'Precision': precision_score(target, pred),
-        'Recall': recall_score(target, pred),
-        'confusion_matrix': confusion_matrix(target, pred)
-    }
-        
-
 def GetHead(in_dim, out_dim):
     return nn.Sequential(
             nn.Linear(in_dim, 256),
@@ -94,10 +80,12 @@ class MultiTaskModel(nn.Module):
         return total_loss, loss
 
     def metrics(self, outputs, targets) -> Any:
+        print("Calculating metrics...", flush=True)
         metrics = {}
         for task_name, task in self.tasks.items():
             out = outputs[task_name]
             tar = targets[task_name]
+            print("Working on ", task_name, flush=True)
             metrics[task_name] = task.metrics(torch.tensor(out), np.array(tar))
         return metrics
     
@@ -284,6 +272,7 @@ class LNMTask(nn.Module):
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
         pred = np.argmax(probs, axis=1).astype(np.int32)
+        print("SUM : ", np.sum(pred), flush=True)
         probs = probs[:, 1]  # 只取正类概率 
         conf = confusion_matrix(target, pred)
         return {
