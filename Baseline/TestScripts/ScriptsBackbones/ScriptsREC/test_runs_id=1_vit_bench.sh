@@ -1,6 +1,6 @@
 python ./Baseline/main_test.py \
     --runs_id "006_REC_vit_bench" \
-    --gpu_id "1" \
+    --gpu_id "0" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
