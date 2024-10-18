@@ -1,5 +1,4 @@
 python ./Baseline/main_test.py \
-python ./Baseline/main_train.py \
     --runs_id "fusion_TE_004_TD_vit_bench" \
     --gpu_id "3" \
     --seed 109 \

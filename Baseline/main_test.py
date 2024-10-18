@@ -2,7 +2,7 @@ from datasets import GetDataLoader
 from models import GetModel
 from oldmodels import GetModel as GetOldModel
 from utils import load_model, parse_arguments
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, precision_score, recall_score
 import numpy as np
 from utils.config import parse_arguments
 import torch
@@ -11,7 +11,9 @@ import os
 import json
 
 
-def bootstrap_auc(labels, probs, num_classes, bootstraps = 100, fold_size = 200):
+def bootstrap_auc(labels, probs, num_classes, bootstraps = 500, fold_size = 200):
+    state = np.random.get_state()
+    np.random.seed(2024)  # for reproducibility
     statistics = np.zeros((num_classes, bootstraps))
 
     for c in range(num_classes):
@@ -26,9 +28,33 @@ def bootstrap_auc(labels, probs, num_classes, bootstraps = 100, fold_size = 200)
             probs_sample = np.concatenate([pos_sample, neg_sample])
             score = roc_auc_score(labels_sample, probs_sample)
             statistics[c][i] = score
+    np.random.set_state(state)
     return statistics
 
 def roc_auc_confidence_interval(statistics, alpha = 0.95):
+    lower = (1 - alpha) / 2
+    upper = alpha + lower
+    lower_bound = np.quantile(statistics, lower, axis = 0)
+    upper_bound = np.quantile(statistics, upper, axis = 0)
+    return lower_bound, upper_bound
+
+
+def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500, fold_size = 200):
+    state = np.random.get_state()
+    np.random.seed(2024)  # for reproducibility
+    statistics = np.zeros((1, bootstraps))
+    
+    for i in range(bootstraps):
+        sample_idx = np.random.choice(len(labels), fold_size, replace=True)
+        sample_labels = labels[sample_idx]
+        sample_preds = preds[sample_idx]
+        score = func_method(sample_labels, sample_preds)
+        statistics[0][i] = score
+    
+    np.random.set_state(state)
+    return statistics
+
+def confidence_interval(statistics, alpha = 0.95):
     lower = (1 - alpha) / 2
     upper = alpha + lower
     lower_bound = np.quantile(statistics, lower, axis = 0)
@@ -87,7 +113,7 @@ class Tester:
     def run(self):
         ret = {}
         # if self.val_loader is not None:
-        #     ret['valid'] = self.eval_epoch(self.val_loader, 'valid')
+            # ret['valid'] = self.eval_epoch(self.val_loader, 'valid')
         if self.test_loader is not None:
             ret['test'] = self.eval_epoch(self.test_loader, 'test')
         return ret
@@ -120,19 +146,37 @@ class Tester:
             for k, v in loss.items():
                 loss_dict[f"loss_{k}_{mode}"] = np.mean(v)
             all_metrics = self.model.metrics(outs, true)
+            func_methods = {
+                "AUC": roc_auc_score,
+                "Acc": accuracy_score,
+                "F1": f1_score,
+                "Precision": precision_score,
+                "Recall": recall_score
+            }
             for k, metrics in all_metrics.items():
+                probs = np.array(outs[k])
+                preds = np.argmax(probs, axis=1)
+                labels = np.array(true[k])
+                num_classes = len(set(true[k]))
                 for m, a in metrics.items():
                     metrics_dict[f"{m}_{k}_{mode}"] = a
-                num_classes = len(set(true[k]))
-                probs = np.array(outs[k])
-                labels = np.array(true[k])
-                statistics = bootstrap_auc(labels, probs, num_classes)
-                metrics_dict[f"95AUC_CI_{k}_{mode}"] = tuple(list(np.round(np.mean([
-                    roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
-                ], axis=0), 4)))
-                temp_key0 = f"AUC_{k}_{mode}"
-                temp_key1 = f"95AUC_CI_{k}_{mode}"
-                metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} \\ {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
+                    if m in list(func_methods.keys()):
+                        if m == "AUC":
+                            statistics = bootstrap_auc(labels, probs, num_classes)
+                            metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(np.round(np.mean([
+                                roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
+                            ], axis=0), 4)))
+                        else:
+                            statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes)
+                            metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(
+                                np.round(confidence_interval(statistics[0]), 4)
+                            ))
+                    
+                # statistics = bootstrap_auc(labels, probs, num_classes)
+                # metrics_dict[f"95AUC_CI_{k}_{mode}"] = tuple(list(np.round(np.mean([
+                #     roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
+                # ], axis=0), 4)))
+                # metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} \\ {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
                 
             print(f"{mode} : {loss_dict}")
             print(f'metrics : ' + str(metrics_dict))

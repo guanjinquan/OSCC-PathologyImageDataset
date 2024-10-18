@@ -1,5 +1,4 @@
 python ./Baseline/main_test.py \
-python ./Baseline/main_train.py \
     --runs_id "003_SUM_vit_bench" \
     --gpu_id "0" \
     --seed 109 \
