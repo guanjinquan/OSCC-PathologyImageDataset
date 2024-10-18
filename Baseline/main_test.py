@@ -39,16 +39,27 @@ def roc_auc_confidence_interval(statistics, alpha = 0.95):
     return lower_bound, upper_bound
 
 
-def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500, fold_size = 200):
+def bootstrap_CI(func_method, labels, preds, num_classes, macro=False, bootstraps = 500, fold_size = 200):
     state = np.random.get_state()
     np.random.seed(2024)  # for reproducibility
     statistics = np.zeros((1, bootstraps))
     
+    sample = [[] for _ in range(num_classes)]
+    for i in range(len(labels)):
+        sample[labels[i]].append(preds[i])
+        
     for i in range(bootstraps):
-        sample_idx = np.random.choice(len(labels), fold_size, replace=True)
-        sample_labels = labels[sample_idx]
-        sample_preds = preds[sample_idx]
-        score = func_method(sample_labels, sample_preds)
+        # balance each class
+        sample_preds = []
+        sample_labels = []
+        for c in range(num_classes):
+            temp_preds = np.random.choice(sample[c], int(np.ceil(len(sample[c]) / len(labels) * fold_size)), replace=True)
+            sample_labels += [c] * len(temp_preds)
+            sample_preds += temp_preds.tolist()
+        if macro:
+            score = func_method(sample_labels, sample_preds, average='macro')
+        else:
+            score = func_method(sample_labels, sample_preds)
         statistics[0][i] = score
     
     np.random.set_state(state)
@@ -155,7 +166,7 @@ class Tester:
             }
             for k, metrics in all_metrics.items():
                 probs = np.array(outs[k])
-                preds = np.argmax(probs, axis=1)
+                preds = np.argmax(probs, axis=1).astype(np.int32)
                 labels = np.array(true[k])
                 num_classes = len(set(true[k]))
                 for m, a in metrics.items():
@@ -167,7 +178,7 @@ class Tester:
                                 roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
                             ], axis=0), 4)))
                         else:
-                            statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes)
+                            statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes, macro=m!='Acc')
                             metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(
                                 np.round(confidence_interval(statistics[0]), 4)
                             ))
