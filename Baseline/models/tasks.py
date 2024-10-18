@@ -80,12 +80,10 @@ class MultiTaskModel(nn.Module):
         return total_loss, loss
 
     def metrics(self, outputs, targets) -> Any:
-        print("Calculating metrics...", flush=True)
         metrics = {}
         for task_name, task in self.tasks.items():
             out = outputs[task_name]
             tar = targets[task_name]
-            print("Working on ", task_name, flush=True)
             metrics[task_name] = task.metrics(torch.tensor(out), np.array(tar))
         return metrics
     
@@ -153,9 +151,9 @@ class RecTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': confusion_matrix(target, pred)
         }
     
@@ -184,9 +182,9 @@ class CancerEmbolusTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
@@ -246,9 +244,9 @@ class NerveInvasionTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
@@ -272,15 +270,14 @@ class LNMTask(nn.Module):
     def metrics(self, out, target):
         probs = nn.Softmax(dim=1)(out).detach().numpy()
         pred = np.argmax(probs, axis=1).astype(np.int32)
-        print("SUM : ", np.sum(pred), flush=True)
         probs = probs[:, 1]  # 只取正类概率 
         conf = confusion_matrix(target, pred)
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         

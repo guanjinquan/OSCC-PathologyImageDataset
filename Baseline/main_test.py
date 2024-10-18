@@ -61,7 +61,7 @@ def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500):
             temp_preds = np.random.choice(sample[c], len(sample[c]), replace=True)
             sample_labels += [c] * len(temp_preds)
             sample_preds += temp_preds.tolist()
-        if (num_classes > 2 and func_method.__name__ != 'accuracy_score'):
+        if (func_method.__name__ != 'accuracy_score'):
             score = func_method(sample_labels, sample_preds, average='macro')
         else:
             score = func_method(sample_labels, sample_preds)

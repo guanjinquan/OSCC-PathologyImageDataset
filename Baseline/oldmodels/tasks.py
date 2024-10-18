@@ -12,6 +12,7 @@ import torch.nn.functional as F
 # loss_weight : str
 # use_tasks : str 
 
+
 def GetHead(in_dim, out_dim):
     return nn.Sequential(
             nn.Linear(in_dim, 256),
@@ -177,9 +178,9 @@ class CancerEmbolusTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
@@ -208,9 +209,9 @@ class InvasionTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
@@ -239,9 +240,9 @@ class NerveInvasionTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
@@ -270,9 +271,9 @@ class LNMTask(nn.Module):
         return {
             'Acc': accuracy_score(target, pred),
             'AUC': roc_auc_score(target, probs),
-            'F1': f1_score(target, pred),
-            'Precision': precision_score(target, pred),
-            'Recall': recall_score(target, pred),
+            'F1': f1_score(target, pred, average='macro'),
+            'Precision': precision_score(target, pred, average='macro'),
+            'Recall': recall_score(target, pred, average='macro'),
             'confusion_matrix': conf 
         }
         
