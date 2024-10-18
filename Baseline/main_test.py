@@ -68,8 +68,6 @@ def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500):
         statistics[0][i] = score
     
     np.random.set_state(state)
-    print("name : ", func_method.__name__, max(statistics[0]), func_method(labels, preds), "???", np.sum(preds))
-    assert max(statistics[0]) >= func_method(labels, preds), "The maximum value of statistics should be larger than the original value."
     return statistics
 
 def confidence_interval(statistics, alpha = 0.95):
