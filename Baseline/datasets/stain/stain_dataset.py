@@ -8,7 +8,7 @@ import pickle as pkl
 
 
 class StainDataset(MyBaseDataset):
-    def __init__(self, stain_method, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=None, args=None):
+    def __init__(self, stain_method, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=False, args=None):
         super().__init__(fold, type, data_type, mean_std, test_mode, args)
         self.transforms = \
             stain_augment.TestTransforms(mean_std) if test_mode \

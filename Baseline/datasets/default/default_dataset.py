@@ -8,7 +8,7 @@ from PIL import Image
 import tqdm
 
 class MyBaseDataset(Dataset):
-    def __init__(self, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=None, args=None):
+    def __init__(self, fold=0, type="train", data_type="ALL", mean_std=None, test_mode=False, args=None):
         super().__init__()
         assert test_mode is not None, "test_mode can't be None."
         assert args is not None, "args can't be None."

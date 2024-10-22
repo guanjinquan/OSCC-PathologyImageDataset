@@ -13,6 +13,8 @@ Results
 wandb
 Baseline/models/backbones/pretrained_weight
 Misc/prestain_log.txt
+.vscode
+Data/*Results*
 
 # C extensions
 *.so
