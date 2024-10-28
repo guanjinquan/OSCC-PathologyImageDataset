@@ -49,9 +49,9 @@ class GradNormTrainer(Trainer):
         norms = []
         for i in range(len(task_loss)):
             # get the gradient of this task loss with respect to the shared parameters
-            gygw = torch.autograd.grad(task_loss[i], W.parameters(), retain_graph=True)
+            gygw = torch.autograd.grad(task_loss[i], W.parameters(), retain_graph=True)  # 计算共享层的梯度
             # compute the norm
-            norms.append(torch.norm(torch.mul(self.loss_weights[i], gygw[0])))
+            norms.append(torch.norm(torch.mul(self.loss_weights[i], gygw[0])))  # 计算共享层的梯度范数[乘上权重之后的]
         norms = torch.stack(norms)
 
         # compute the inverse training rate r_i(t)  \curl{L}_i 
@@ -60,22 +60,24 @@ class GradNormTrainer(Trainer):
         else:
             loss_ratio = task_loss.data.numpy() / self.initial_task_loss
         # r_i(t)
-        inverse_train_rate = loss_ratio / np.mean(loss_ratio)
+        inverse_train_rate = loss_ratio / np.mean(loss_ratio)  # 如果相对于初始loss下降的比例大于平均值，则r_i(t) > 1，此时应该减小该任务的权重
 
         # compute the mean norm \tilde{G}_w(t) 
         if torch.cuda.is_available():
-            mean_norm = np.mean(norms.data.cpu().numpy())
+            mean_norm = np.mean(norms.data.cpu().numpy())  # 计算所有任务的梯度范数的均值
         else:
             mean_norm = np.mean(norms.data.numpy())
 
         # compute the GradNorm loss 
         # this term has to remain constant
-        constant_term = torch.tensor(mean_norm * (inverse_train_rate ** self.alpha), requires_grad=False)
+        # inverse_train_rate < 1时，constant_term > mean_norm，此时应该增大该任务的权重
+        # inverse_train_rate > 1时，constant_term < mean_norm，此时应该减小该任务的权重
+        constant_term = torch.tensor(mean_norm * (inverse_train_rate ** self.alpha), requires_grad=False)  
         if torch.cuda.is_available():
             constant_term = constant_term.cuda()
             
         # this is the GradNorm loss itself
-        grad_norm_loss = torch.sum(torch.abs(norms - constant_term))
+        grad_norm_loss = torch.sum(torch.abs(norms - constant_term))  # 范数与常数项的差值的绝对值之和，目的是让所有任务的梯度范数接近常数项
 
         # compute the gradient for the weights
         return torch.autograd.grad(grad_norm_loss, self.loss_weights)[0]
@@ -100,14 +102,17 @@ class GradNormTrainer(Trainer):
                         tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                         weighted_loss = torch.sum(self.loss_weights * tasks_loss)
                         weighted_loss = self.scaler.scale(weighted_loss)
+                        weighted_losses = {k: self.loss_weights[i] * losses[k] for i, k in enumerate(losses.keys())}
                 else:
                     out = self.model(x)
                     _, losses = self.LossFn(out, y)
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                     weighted_loss = torch.sum(self.loss_weights * tasks_loss)
+                    weighted_losses = {k: self.loss_weights[i] * losses[k] for i, k in enumerate(losses.keys())}
+                    
                     
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
-                for k, v in losses.items():
+                for k, v in weighted_losses.items():
                     loss[k] = loss.get(k, []) + [v.item()]
                 for k in y.keys():  # remove -1 On training set
                     mask = y[k] != -1
@@ -190,9 +195,10 @@ class GradNormTrainer(Trainer):
                 _, losses = self.LossFn(out, y)
                 tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                 weighted_loss = torch.sum(self.loss_weights * tasks_loss)
+                weighted_losses = {k: self.loss_weights[i] * losses[k] for i, k in enumerate(losses.keys())}
                 
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
-                for k, v in losses.items():
+                for k, v in weighted_losses.items():
                     loss[k] = loss.get(k, []) + [v.item()]
                 for k, v in out.items():
                     outs[k] = outs.get(k, []) + v.detach().cpu().numpy().tolist()

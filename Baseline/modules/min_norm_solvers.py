@@ -219,6 +219,8 @@ if __name__ == "__main__":
     # calculate the covariance matrix (used as part of the risk measure)
     cov_matrix = torch.cov(torch.stack([returns_asset1, returns_asset2, returns_asset3]))
 
+    print(cov_matrix)
+
     # construct the risk vectors for each asset (i.e., the covariance vectors for each asset
     risk_asset1 = cov_matrix[0]  # 资产1的协方差
     risk_asset2 = cov_matrix[1]  # 资产2的协方差

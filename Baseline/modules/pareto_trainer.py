@@ -43,10 +43,12 @@ class ParetoTrainer(Trainer):
                 if param.grad is not None:
                     grads[t].append(torch.autograd.Variable(param.grad.data.clone(), requires_grad=False))
 
+        # gn[t] = losses[t] * np.sqrt(np.sum([gr.pow(2).sum().data.cpu().numpy() for gr in grads[t]]))
+        # that is the loss * the l2 norm of the gradients
         gn = gradient_normalizers(grads, loss_data, self.normalization_type)
         for t in self.tasks:
             for gr_i in range(len(grads[t])):
-                grads[t][gr_i] = grads[t][gr_i] / gn[t]
+                grads[t][gr_i] = grads[t][gr_i] / gn[t]  # normalize to get the gradient direction
 
         # Frank-Wolfe iteration to compute scales.
         sol, min_norm = MinNormSolver.find_min_norm_element([grads[t] for t in self.tasks])
@@ -100,14 +102,16 @@ class ParetoTrainer(Trainer):
                         tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                         weighted_loss = torch.sum(scale * tasks_loss)
                         weighted_loss = self.scaler.scale(weighted_loss)
+                        weighted_losses = {k: scale[i] * losses[k] for i, k in enumerate(losses.keys())}
                 else:
                     out = self.model(x)
                     _, losses = self.LossFn(out, y)
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                     weighted_loss = torch.sum(scale * tasks_loss)
+                    weighted_losses = {k: scale[i] * losses[k] for i, k in enumerate(losses.keys())}
                     
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
-                for k, v in losses.items():
+                for k, v in weighted_losses.items():
                     loss[k] = loss.get(k, []) + [v.item()]
                 for k in y.keys():  # remove -1 On training set
                     mask = y[k] != -1
