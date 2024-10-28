@@ -129,7 +129,7 @@ class Tester:
     def run(self):
         ret = {}
         # if self.val_loader is not None:
-            # ret['valid'] = self.eval_epoch(self.val_loader, 'valid')
+        #     ret['valid'] = self.eval_epoch(self.val_loader, 'valid')
         if self.test_loader is not None:
             ret['test'] = self.eval_epoch(self.test_loader, 'test')
         return ret
