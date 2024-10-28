@@ -14,7 +14,7 @@ def parse_arguments():
     
     # dataset settings 
     parser.add_argument('--datainfo_file', type=str, default="pathology_info.json") 
-    parser.add_argument('--split_filename', type=str, required=True)
+    parser.add_argument('--split_filename', type=str, default="split_seed=2024.json")
     parser.add_argument('--data_type', type=str, default="ALL")
     parser.add_argument('--img_size', type=int, default=512)
     parser.add_argument('--crop_scale', type=float, default=0.8)

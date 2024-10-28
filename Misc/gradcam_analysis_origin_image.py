@@ -11,7 +11,7 @@ from Baseline.oldmodels import GetModel as GetOldModel
 from Baseline.datasets import GetDataLoader
 from Baseline.utils import parse_arguments, load_model
 import random
-import json
+import glob
 
 from pytorch_grad_cam import GradCAM, \
     ScoreCAM, \
@@ -49,28 +49,25 @@ class TaskSpecificModel(nn.Module):
         return x[self.task]
 
 
-
 if __name__ == '__main__':
-    """
-    python ./Misc/gradcam_analysis.py \
-        --runs_id "002_REC_resnet50_imagenet" \
-        --model "resnet50_imagenet" \
-        --gpu_id "0" \
-        --seed 109 \
-        --batch_size 1 \
-        --split_filename "split_seed=2024.json" \
-        --datainfo_file "all_metadata.json" \
-        --img_size 512 \
-        --use_tasks "['REC']"
-
-    """
     
+    # setting config
+    origin_images_path = "/home/Guanjq/HuangData/PathologyImages/"
+    gpu_id = "1"
+    load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
     
+    # inference setting
     os.chdir(os.path.dirname(__file__) + "/../")
     args = parse_arguments()
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu_id
+    args.split_filename = "split_seed=2024.json"
+    args.datainfo_file = "all_metadata.json"
     
-    # 固定种子
+    basename = os.path.basename(load_pth_path)
+    args.model = basename.split('-')[1].split('.')[0]
+    task = basename.split('-')[0]
+    
+    # fixed seed
     seed = int(args.seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -78,25 +75,10 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
     random.seed(seed)
-    
-    # load weights
-    tasks = eval(args.use_tasks)
-    if len(tasks) > 1:
-        load_pth_path = os.path.join(args.ckpt_path, args.model, args.runs_id, f"valid_MultiTask_Best.pth")
-    else:
-        task = tasks[0]
-        load_pth_path = os.path.join(args.ckpt_path, args.model, args.runs_id, f"valid_{task}_Best.pth")
 
     # dataset 
     mean_std = ([175.14728804175988, 110.57123792228117, 176.73598615775617], [21.239463551725915, 39.15991384752335, 10.99100631656543])
     train_loader, val_loader, test_loader = GetDataLoader(0, mean_std, args, True)
-
-    # pid to numpy path
-    pid2npypath = {}
-    with open(f'./Data/{args.datainfo_file}', 'r') as f:
-        data = json.load(f)['datainfo']
-        for item in data:
-            pid2npypath[item['pid']] = item['path']
         
     
     # running setting
@@ -121,8 +103,7 @@ if __name__ == '__main__':
         pretrain = {k: v for k, v in pretrain.items() if k in model.state_dict()}
         model.load_state_dict(pretrain)
     
-    task_name = eval(args.use_tasks)[0]
-    model = TaskSpecificModel(task_name, model).cuda()
+    model = TaskSpecificModel(task, model).cuda()
     
 
     # CAM Methods
@@ -151,7 +132,7 @@ if __name__ == '__main__':
     os.makedirs(f'./Data/{Analysis_Name}_GradCAM_Results', exist_ok=True)
     for x, y, ids in train_loader:
         x = x.cuda()
-        t = torch.ones((1)).long().cuda()  # only focus on the positive class
+        t = torch.ones((1)).long().cuda()
         for k, v in y.items():
             y[k] = v.cuda()
         ids = ids.cpu().data.numpy() 
@@ -163,18 +144,24 @@ if __name__ == '__main__':
         for i, pid in enumerate(ids):
             print(f"Processing {pid}...", flush=True)
             os.makedirs(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}', exist_ok=True)
-            image = np.load(pid2npypath[pid])
-            for j in range(6):  # 6 images per patient
-                rgb_img_uint8 = image[j].transpose(1, 2, 0).astype(np.uint8)
+            
+            pid_dir = glob.glob(f"{origin_images_path}/*{pid}*")
+            image_names = ['01_2X', "01_4X", "01_10X", "02_2X", "02_4X", "02_10X"]
+            
+            for j, name in enumerate(image_names):
+                image = cv2.imread(f"{pid_dir[0]}/{name}.jpg")
+                rgb_img_uint8 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 rgb_img = np.float32(rgb_img_uint8) / 255
                 grayscale_cam = scale_cam[i * 6 + j, :]
+                grayscale_cam = cv2.resize(grayscale_cam, (rgb_img.shape[1], rgb_img.shape[2]))
                 cam_image = show_cam_on_image(rgb_img, grayscale_cam)
                 grayscale_cam_uint8 = np.uint8(grayscale_cam * 255)
-                # cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y[task_name][i].item()}.jpg', cam_image)
+                # cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y["REC"][i].item()}.jpg', cam_image)
                 grayscale_cam_uint8 = cv2.applyColorMap(grayscale_cam_uint8, cv2.COLORMAP_JET)
-                cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y[task_name][i].item()}_heatmap.jpg', grayscale_cam_uint8)
-                cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y[task_name][i].item()}_rgb.jpg', rgb_img_uint8)
-        
+                cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y["REC"][i].item()}_heatmap.jpg', grayscale_cam_uint8)
+                cv2.imwrite(f'./Data/{Analysis_Name}_GradCAM_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y["REC"][i].item()}_rgb.jpg', rgb_img_uint8)
+                exit(0)
+            
         del x, y, ids, scale_cam
         torch.cuda.empty_cache()
         
