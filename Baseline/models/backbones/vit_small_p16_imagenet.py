@@ -11,7 +11,7 @@ def get_vit(args):
     pretrain_model = vit_small_patch16_224(pretrained=True).state_dict()
     
     model = VisionTransformer(  # 512 / 16 = 32 -> 32 * 32 patches
-        img_size=args.img_size, patch_size=16, embed_dim=386, depth=12, num_heads=12
+        img_size=args.img_size, patch_size=16, embed_dim=384, depth=12, num_heads=12
     )
     
     pretrain_model['pos_embed'] = resize_pos_embed(pretrain_model['pos_embed'], model.pos_embed)
@@ -34,7 +34,7 @@ class ViTSmallImagenet(nn.Module):
 
 def get_vit_small_imagenet(args):
     model = ViTSmallImagenet(args)
-    return model, 386
+    return model, 384
 
 
 if __name__ == '__main__':
