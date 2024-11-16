@@ -7,3 +7,4 @@ from models.backbones.vit_base_hibou import get_vit_base_hibou
 from models.backbones.vit_base_p16_uni import get_vit_base_uni
 from models.backbones.vit_base_p16_conch import get_vit_base_conch
 from models.backbones.vit_base_imagenet import get_vit_base_imagenet
+from models.backbones.vit_small_p16_imagenet import get_vit_small_imagenet

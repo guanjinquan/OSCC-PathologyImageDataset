@@ -22,6 +22,8 @@ def GetModel(args):
         backbone, embed_dim = get_vit_base_conch(args)
     elif args.model == 'vit_base_imagenet':
         backbone, embed_dim = get_vit_base_imagenet(args)
+    elif args.model == 'vit_small_imagenet':
+        backbone, embed_dim = get_vit_small_imagenet(args)
     else:
         raise ValueError("model not supported")
     

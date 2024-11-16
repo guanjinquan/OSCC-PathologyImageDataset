@@ -17,6 +17,7 @@ Misc/prestain_log.txt
 Data/*Results*
 Data/*GradCAM_Results*
 BestCheckpoints
+ReleaseCheckpoints
 
 # C extensions
 *.so

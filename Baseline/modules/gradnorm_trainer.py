@@ -21,14 +21,14 @@ class GradNormTrainer(Trainer):
         self.alpha = 0.12
         self.loss_weights_grad = []
         
-        # load loss_weight pretrain
-        if self.args.finetune:
-            assert self.args.load_pth_path is not None, "load_path can't be None."
-            print(f"Load from {self.args.load_pth_path}!!!", flush=True)
-            cp = load_model(self.args.load_pth_path)
-            pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
-            pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
-            self.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
+        # load loss_weight pretrain [didn't save loss_weights in the best checkpoint]
+        # if self.args.finetune:
+        #     assert self.args.load_pth_path is not None, "load_path can't be None."
+        #     print(f"Load from {self.args.load_pth_path}!!!", flush=True)
+        #     cp = load_model(self.args.load_pth_path)
+        #     pretrain = {k.replace('module.', ''): v for k, v in cp['model'].items()}
+        #     pretrain = {k: v for k, v in pretrain.items() if k in self.model.state_dict()}
+        #     self.loss_weights = torch.nn.Parameter(pretrain['loss_weights'].cuda())
         
         self.loss_weight_list = [[] for _ in range(len(eval(self.args.use_tasks)))]
         self.loss_weight_grad_list = [[] for _ in range(len(eval(self.args.use_tasks)))]
@@ -109,8 +109,7 @@ class GradNormTrainer(Trainer):
                     tasks_loss = torch.stack([losses[k] for k in losses.keys()])    # shape = (n_tasks, )
                     weighted_loss = torch.sum(self.loss_weights * tasks_loss)
                     weighted_losses = {k: self.loss_weights[i] * losses[k] for i, k in enumerate(losses.keys())}
-                    
-                    
+                           
                 loss['weighted_total'] = loss.get('weighted_total', []) + [weighted_loss.item()]
                 for k, v in weighted_losses.items():
                     loss[k] = loss.get(k, []) + [v.item()]

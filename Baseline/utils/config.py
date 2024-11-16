@@ -9,7 +9,6 @@ def parse_arguments():
     parser.add_argument('--ckpt_path', type=str, default='./Checkpoints/', help='the path to save checkpoints')
     parser.add_argument('--log_path', type=str, default='./Results', help='the path to save log')
     parser.add_argument('--load_pth_path', type=str)
-    parser.add_argument('--finetune', type=bool, default=False)
     
     
     # dataset settings 
@@ -45,9 +44,10 @@ def parse_arguments():
                         default='AdamW', help='choose optimizer')
     parser.add_argument('--scheduler', type=str, default='CosineAnnealingLR',
                         help='choose scheduler')
-    parser.add_argument('--use_amp', type=bool, default=False)
-    parser.add_argument('--use_ddp', type=bool, default=False)
-    parser.add_argument('--continue_training', type=bool, default=False)
+    parser.add_argument('--use_amp', action='store_true')
+    parser.add_argument('--use_ddp', action='store_true')
+    parser.add_argument('--finetune', action='store_true')
+    parser.add_argument('--continue_training', action='store_true')
     
     
     args = parser.parse_args()
