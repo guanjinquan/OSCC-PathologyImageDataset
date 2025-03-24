@@ -45,9 +45,10 @@ pip install -r requirements.txt
 ```
 
 
-## (4) Stain Normalization Visualization
-![Stain normalization samples](./Data/visualize_diff_stain_method.png)
+## (4) Visualization
 
+![v1](./Visualizations/results_visualization_abc.png)
+![v1](./Visualizations/results_visualization_def.png)
 
 ## Cite this work
 If you use this dataset, please cite the following paper:
