@@ -49,11 +49,11 @@ pip install -r requirements.txt
 
 <!-- 使用方法1：HTML 标签 -->
 <p align="center">
-  <img src="./Visualizations/results_visualization_abc.png" width="200" alt="图1">
+  <img src="./Visualizations/results_visualization_abc.png" width="500" alt="图1">
 </p>
 
 <p align="center">
-  <img src="./Visualizations/results_visualization_def.png" width="200" alt="图2">
+  <img src="./Visualizations/results_visualization_def.png" width="500" alt="图2">
 </p>
 ## Cite this work
 If you use this dataset, please cite the following paper:
