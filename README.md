@@ -29,12 +29,10 @@ The best setting of each tasks are shown in the following table, and these model
 ### 2-2 Final benchmark results after unified model settings
 The benchmark results of the unified model settings are shown in the following table.
 
- Benchmark Type | REC  | LNM  | TD   | TI   | CE   | PI   |
-
+| Benchmark Type | REC  | LNM  | TD   | TI   | CE   | PI   |
 |----------------|------|------|------|------|------|------|
-
 | Single-Task(AUC%)    | 93.13|71.06|75.21|72.47|75.52|66.19|
-
+|----------------|------|------|------|------|------|------|
 | Multi-Task   (AUC%)  |87.17 |67.61|72.51|67.82|68.37|67.41|
 
 
@@ -49,7 +47,7 @@ pip install -r requirements.txt
 
 
 ## (4) Stain Normalization Visualization
-[Stain normalization samples](./Data/visualize_diff_stain_method.png)
+![Stain normalization samples](./Data/visualize_diff_stain_method.png)
 
 
 ## Cite this work
