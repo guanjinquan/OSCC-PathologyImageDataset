@@ -33,8 +33,8 @@ The benchmark results of the unified model settings are shown in the following t
 |   Benchmark  | REC   | LNM   | TD    | TI    | CE    | PI    |
 |---------|-------|-------|-------|-------|-------|-------|
 | Single-Task  AUC(%)  |93.13% |71.06% |75.21% |72.47% |75.52% |66.19%|
-
 | Multi-Task  AUC(%)  |87.17% |67.61% |72.51% |67.82% |68.37% |67.41%|
+
 ## (3) Environment
 Follow the instructions below to create a conda environment with the required dependencies.
 ```
