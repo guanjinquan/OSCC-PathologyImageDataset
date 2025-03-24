@@ -47,8 +47,8 @@ pip install -r requirements.txt
 
 ## (4) Visualization
 
-![v1](./Visualizations/results_visualization_abc.png =200x)
-![v1](./Visualizations/results_visualization_def.png =200x)
+![v1](./Visualizations/results_visualization_abc.png#pic_center =200x)
+![v1](./Visualizations/results_visualization_def.png#pic_center =200x)
 
 ## Cite this work
 If you use this dataset, please cite the following paper:
