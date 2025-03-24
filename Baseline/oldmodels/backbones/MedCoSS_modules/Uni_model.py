@@ -216,37 +216,3 @@ class Unified_Model(nn.Module):
             x = x[:, 1:, :].mean(dim=1)
             
             return x
-
-# 2D
-# if __name__ == "__main__":
-#     model = Unified_Model(now_2D_input_size=(128, 128))
-#     state = model.state_dict()
-#     checkpoint = torch.load("/home/Guanjq/Work/MultiTaskMI/Baseline/backbones/MedCoSS_modules/vit_base_p16_224_medcoss_epoch299.pth")['model']
-    
-#     print(set(checkpoint.keys()) - set(state.keys()))
-#     print(set(state.keys()) - set(checkpoint.keys()))
-    
-#     checkpoint = {k: v for k, v in checkpoint.items() if k in state.keys()}
-#     model.load_state_dict(checkpoint)
-    
-    
-#     input = torch.ones((4, 1, 128, 128))
-#     model._change_input_chans(1)
-#     print(model({"modality": "2D image", "data": input}).shape)
-
-# 3D
-if __name__ == "__main__":
-    model = Unified_Model(now_2D_input_size=(128, 128), input_size_3D=(128, 128, 128))
-    state = model.state_dict()
-    checkpoint = torch.load("/home/Guanjq/Work/MultiTaskMI/Baseline/backbones/MedCoSS_modules/vit_base_p16_224_medcoss_epoch299.pth")['model']
-    
-    # print(set(checkpoint.keys()) - set(state.keys()))
-    # print(set(state.keys()) - set(checkpoint.keys()))
-    
-    checkpoint = {k: v for k, v in checkpoint.items() if k in state.keys()}
-    model._loadpth_with_diffsize_3D(checkpoint)
-    model.cuda()
-    
-    input = torch.ones((4, 1, 128, 128, 128)).cuda()
-    # model._change_input_chans(1)
-    print(model({"modality": "3D image", "data": input}).shape) 

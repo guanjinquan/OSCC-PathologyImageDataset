@@ -52,7 +52,7 @@ class TaskSpecificModel(nn.Module):
 if __name__ == '__main__':
     
     # setting config
-    origin_images_path = "/home/Guanjq/HuangData/PathologyImages/"
+    origin_images_path = "./HuangData/PathologyImages/"
     gpu_id = "1"
     load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
     

@@ -3,7 +3,7 @@ python  ./Baseline/main_train.py \
     --runs_id "reinhard_006_PI_vit_bench" \
     --gpu_id "0" \
 =======
-python  /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/main_train.py \
+python  ./Baseline/main_train.py \
     --runs_id "reinhard_006_PI_vit_bench_32cluster" \
     --gpu_id "1" \
 >>>>>>> Stashed changes

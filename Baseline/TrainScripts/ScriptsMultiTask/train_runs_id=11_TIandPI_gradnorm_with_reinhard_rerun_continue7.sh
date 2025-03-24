@@ -15,4 +15,4 @@ python ./Baseline/main_train_grad_norm.py \
     --augment_method 'reinhard' \
     --use_tasks "['TI', 'PI']" \
     --finetune \
-    --load_pth_path "/home/Guanjq/Work/OSCC-PathologyImageDataset/Checkpoints/vit_small_p16_pathology/007_gradnorm_with_reinhard_TIandPI/valid_MultiTask_Best.pth"
+    --load_pth_path "./Checkpoints/vit_small_p16_pathology/007_gradnorm_with_reinhard_TIandPI/valid_MultiTask_Best.pth"
