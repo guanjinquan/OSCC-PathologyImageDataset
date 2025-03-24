@@ -47,9 +47,14 @@ pip install -r requirements.txt
 
 ## (4) Visualization
 
-![v1](./Visualizations/results_visualization_abc.png#pic_center =200x)
-![v1](./Visualizations/results_visualization_def.png#pic_center =200x)
+<!-- 使用方法1：HTML 标签 -->
+<p align="center">
+  <img src="./Visualizations/results_visualization_abc.png" width="200" alt="图1">
+</p>
 
+<p align="center">
+  <img src="./Visualizations/results_visualization_def.png" width="200" alt="图2">
+</p>
 ## Cite this work
 If you use this dataset, please cite the following paper:
 ```
