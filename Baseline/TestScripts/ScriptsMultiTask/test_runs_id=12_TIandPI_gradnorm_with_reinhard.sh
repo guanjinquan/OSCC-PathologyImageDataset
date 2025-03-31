@@ -1,7 +1,7 @@
 python ./Baseline/main_test.py \
-    --runs_id "009_PI_vit_small_imagenet" \
+    --runs_id "012_gradnorm_with_reinhard_TIandPI" \
     --gpu_id "0" \
-    --seed 109 \
+    --seed 108 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \
     --backbone_lr 5e-7 \
@@ -10,7 +10,7 @@ python ./Baseline/main_test.py \
     --split_filename "split_seed=2024.json" \
     --datainfo_file "all_metadata.json" \
     --img_size 512 \
-    --optimizer "AdamW" \
     --num_epochs 400 \
-    --model "vit_small_imagenet" \
-    --use_tasks "['PI']"
+    --model "vit_small_p16_pathology" \
+    --augment_method 'reinhard' \
+    --use_tasks "['TI', 'PI']"

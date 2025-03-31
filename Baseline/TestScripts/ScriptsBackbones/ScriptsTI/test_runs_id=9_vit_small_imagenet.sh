@@ -1,6 +1,6 @@
 python ./Baseline/main_test.py \
     --runs_id "009_TI_vit_small_imagenet" \
-    --gpu_id "2" \
+    --gpu_id "1" \
     --seed 109 \
     --weight_decay 6e-5 \
     --learning_rate 1e-6 \

@@ -3,7 +3,8 @@
 ## (1) Multi-OSCC Datasets 
 
 ### 1-1 Dataset Download
-The url is coming soon.
+Baidu Web Disk: https://pan.baidu.com/s/16-_BD_lvCWlovOJBZwDnpg?pwd=oscc (extract code: oscc)
+
 
 ### 1-2 Dataset splitation
 Following the random seed 42, we split the dataset into training, validation, and test sets with a ratio of 70:15:15.
