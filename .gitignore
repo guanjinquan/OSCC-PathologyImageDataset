@@ -5,7 +5,8 @@ __pycache__/
 
 # data files can't upload
 **/__pycache__
-Data/NpyData
+Data/NpyData*
+Data/Features*
 Data/CudaNormalizers
 Data/StainNormedData
 Checkpoints
