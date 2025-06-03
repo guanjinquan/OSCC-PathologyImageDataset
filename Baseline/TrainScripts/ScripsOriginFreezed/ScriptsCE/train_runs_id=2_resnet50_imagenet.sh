@@ -1,0 +1,16 @@
+CUDA_VISIBLE_DEVICES="2" python ./Baseline/main_train.py \
+    --runs_id "002_CE_resnet50_imagenet" \
+    --gpu_id "0" \
+    --seed 109 \
+    --weight_decay 6e-5 \
+    --learning_rate 1e-6 \
+    --backbone_lr 5e-7 \
+    --acc_step 1 \
+    --batch_size 1 \
+    --split_filename "split_seed=2024.json" \
+    --datainfo_file "all_metadata_origin_size.json" \
+    --freezed_backbone \
+    --img_size "1944,2592" \
+    --num_epochs 400 \
+    --model "resnet50_imagenet" \
+    --use_tasks "['CE']"

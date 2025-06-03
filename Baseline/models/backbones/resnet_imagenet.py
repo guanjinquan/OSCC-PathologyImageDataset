@@ -8,7 +8,7 @@ class ResNetImagenet(nn.Module):
 
     def __init__(self, args, layers):
         super(ResNetImagenet, self).__init__()
-        
+        self.freezed_backbone = args.freezed_backbone
         self.img_size = args.img_size
         if layers == 18:
             self.extractor = torchvision.models.resnet18(pretrained=True)
@@ -35,7 +35,11 @@ class ResNetImagenet(nn.Module):
         return [p for p in self.parameters() if p not in backbones]
         
     def forward(self, x):
-        x = self.extractor(x)
+        if self.freezed_backbone:
+            with torch.no_grad():
+                x = self.extractor(x)
+        else:
+            x = self.extractor(x)
         return x
 
 
@@ -47,4 +51,8 @@ if __name__ == "__main__":
     class Args:
         img_size = 512
     model = get_resnet_imagenet(Args(), 50)[0]
-    print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")
+    # print(model)
+    img = torch.zeros((3, 2592, 1944))
+    out = model(img.unsqueeze(0))
+    print("Output shape: ", out.shape)
+    # print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")

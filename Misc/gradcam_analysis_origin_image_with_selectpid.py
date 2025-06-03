@@ -50,32 +50,8 @@ class TaskSpecificModel(nn.Module):
         return x[self.task]
 
 
-if __name__ == '__main__':
-    import os
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-    gpu_id = "0"
 
-    
-    # setting config
-    origin_images_path = "./HuangData/PathologyImages/"
-    gpu_id = "1"
-    load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
-    origin_images_path = "/home/Guanjq/HuangData/Multi-OSCCPI-Dataset/"
-    # load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
-    # load_pth_path = "./BestCheckpoints/REC-vit_base_imagenet.pth"
-    # load_pth_path = "./BestCheckpoints/REC-vit_small_p16_pathology.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology-macenko.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_base_p16_conch.pth"
-    # load_pth_path = "./BestCheckpoints/LNM-vit_small_p16_pathology.pth"
-    # load_pth_path = "./BestCheckpoints/TD-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/TD-vit_base_p16_conch.pth"
-    # load_pth_path = "./BestCheckpoints/PI-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/PI-vit_base_p16_conch.pth"
-    
-    # inference setting
-    os.chdir(os.path.dirname(__file__) + "/../")
+def work(task, pth_path, pid_list):
     args = parse_arguments()
     args.batch_size = 1
     os.environ["CUDA_VISIBLE_DEVICES"]=gpu_id
@@ -84,7 +60,7 @@ if __name__ == '__main__':
     args.split_filename = "split_seed=2024.json"
     args.datainfo_file = "all_metadata.json"
     
-    basename = os.path.basename(load_pth_path)
+    basename = os.path.basename(pth_path)
     args.model = basename.split('-')[1].split('.')[0]
     task = basename.split('-')[0]
     args.use_tasks = f"['{task}']"
@@ -105,9 +81,9 @@ if __name__ == '__main__':
     
     # running setting
     model = GetModel(args).cuda()
-    assert load_pth_path is not None, "load_path can't be None."
-    print(f"Load from {load_pth_path}!!!", flush=True)
-    cp = load_model(load_pth_path)
+    assert pth_path is not None, "load_path can't be None."
+    print(f"Load from {pth_path}!!!", flush=True)
+    cp = load_model(pth_path)
     
     flag = False
     for k, v in cp['model'].items():
@@ -163,8 +139,11 @@ if __name__ == '__main__':
     Analysis_Name = f"{task}_{args.method}"
     os.makedirs(f'./Data/{Analysis_Name}_Results', exist_ok=True)
     # loader = train_loader
-    loader = itertools.chain(val_loader, test_loader)
+    loader = itertools.chain(train_loader, val_loader, test_loader)
     for x, y, ids in loader:
+        
+        if int(ids[0].item()) not in pid_list:
+            continue
         
         x = x.cuda()
         for k, v in y.items():
@@ -172,19 +151,13 @@ if __name__ == '__main__':
         
         label = y[task].item()
         t: torch.Tensor = torch.tensor([label]).cuda()
-    
-        if label == 0:
-            continue
         
         if labels_counter[label] >= 40:
             print(f"Skip {ids} due to enough {label} samples.", flush=True)
             continue
         
+        model.eval()
         probs = torch.softmax(model(x), dim=1)
-        confidence = torch.max(probs, dim=1).values.item()
-        if confidence < 0.6:
-            print(f"Skip {ids} due to low confidence.", flush=True)
-            continue
         if torch.argmax(probs, dim=1) != label:
             print(f"Skip {ids} due to wrong prediction.", flush=True)
             continue
@@ -198,7 +171,7 @@ if __name__ == '__main__':
         # visualization
         for i, pid in enumerate(ids):
             print(f"Processing {pid} ...", flush=True)
-            os.makedirs(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}', exist_ok=True)
+            os.makedirs(f'./Data/{Analysis_Name}_Results/label={label}_{pid}', exist_ok=True)
             
             pid_dir = glob.glob(f"{origin_images_path}/*{pid}*")
             image_names = ['01_2X', "01_4X", "01_10X", "02_2X", "02_4X", "02_10X"]
@@ -212,14 +185,58 @@ if __name__ == '__main__':
                 grayscale_cam = cv2.resize(grayscale_cam, (rgb_img.shape[1], rgb_img.shape[0]))
                 # print("After : ", grayscale_cam.shape, flush=True)
                 cam_image = show_cam_on_image(rgb_img, grayscale_cam)
-                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}/{j}th_score.jpg', cam_image)
+                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}/{j}th_score.jpg', cam_image)
                 # grayscale_cam_uint8 = np.uint8(grayscale_cam * 255)
                 # grayscale_cam_uint8 = cv2.applyColorMap(grayscale_cam_uint8, cv2.COLORMAP_JET)
                 # cv2.imwrite(f'./Data/{Analysis_Name}_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y[task][i].item()}_heatmap.jpg', grayscale_cam_uint8)
-                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}/{j}th_rgb.jpg', rgb_img_uint8)
+                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}/{j}th_rgb.jpg', rgb_img_uint8)
                 # exit(0)
             
         # del torch tensor
         del x, y, ids, scale_cam, t, probs, cam, loss_function
         torch.cuda.empty_cache()
-        
+
+
+if __name__ == '__main__':
+    import os
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+    gpu_id = "1"
+
+    task_pidlist = {
+        # "REC": [944195, 844435, 926175, 852399, 1065283],
+        # "LNM": [937288, 848409, 896687, 868852],
+        # "TD": [926175, 1204563, 1109657],
+        # "TI": [848847, 1140861, 1114293],
+        "CE": [1196848],
+        # "PI": [896463, 822222, 1115506, 852402, 813489]
+    }
+
+    
+    # setting config
+    origin_images_path = "/home/Guanjq/HuangData/Multi-OSCCPI-Dataset/"
+    # load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
+    # load_pth_path = "./BestCheckpoints/REC-vit_base_imagenet.pth"
+    # load_pth_path = "./BestCheckpoints/REC-vit_small_p16_pathology.pth"
+    # load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology.pth"
+    # load_pth_path = "./BestCheckpoints/LNM-vit_small_p16_pathology.pth"
+    # load_pth_path = "./BestCheckpoints/TD-vit_small_p16_pathology-reinhard.pth"
+    # load_pth_path = "./BestCheckpoints/TD-vit_base_p16_conch.pth"
+    # load_pth_path = "./BestCheckpoints/PI-vit_small_p16_pathology-reinhard.pth"
+    # load_pth_path = "./BestCheckpoints/PI-vit_base_p16_conch.pth"
+    
+    task_pth = {
+        "REC": "./BestCheckpoints/REC-vit_small_p16_pathology.pth",
+        "LNM": "./BestCheckpoints/LNM-vit_small_p16_pathology.pth",
+        "TD": "./BestCheckpoints/TD-vit_small_p16_pathology-reinhard.pth",
+        "TI": "./BestCheckpoints/TI-vit_small_p16_pathology.pth",
+        "CE": "./BestCheckpoints/CE-vit_small_p16_pathology.pth",
+        "PI": "./BestCheckpoints/PI-vit_small_p16_pathology-reinhard.pth"
+    }
+    
+    # inference setting
+    os.chdir(os.path.dirname(__file__) + "/../")
+    
+    for task, pid_list in task_pidlist.items():
+        work(task, task_pth[task], pid_list)
+    
+    

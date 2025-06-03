@@ -29,6 +29,7 @@ from pytorch_grad_cam.utils.image import show_cam_on_image, \
     preprocess_image
 # from pytorch_grad_cam.ablation_layer import AblationLayerVit
 
+
 def reshape_transform(tensor, height=32, width=32):
     result = tensor[:, 1:, :].reshape(tensor.size(0),
                                       height, width, tensor.size(2))
@@ -39,43 +40,21 @@ def reshape_transform(tensor, height=32, width=32):
     return result
 
 
-class TaskSpecificModel(nn.Module):
-    def __init__(self, task, model):
-        super(TaskSpecificModel, self).__init__()
+class MultiTaskModel(nn.Module):
+    def __init__(self, model):
+        super(MultiTaskModel, self).__init__()
         self.model = model
-        self.task = task
 
     def forward(self, x):
         x = self.model(x)
-        return x[self.task]
+        return [x]
+
+    def loss(self, x, y):
+        a, _ = self.model.loss(x, y)
+        return a
 
 
-if __name__ == '__main__':
-    import os
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-    gpu_id = "0"
-
-    
-    # setting config
-    origin_images_path = "./HuangData/PathologyImages/"
-    gpu_id = "1"
-    load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
-    origin_images_path = "/home/Guanjq/HuangData/Multi-OSCCPI-Dataset/"
-    # load_pth_path = "./BestCheckpoints/TI-vit_small_p16_pathology.pth"
-    # load_pth_path = "./BestCheckpoints/REC-vit_base_imagenet.pth"
-    # load_pth_path = "./BestCheckpoints/REC-vit_small_p16_pathology.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_small_p16_pathology-macenko.pth"
-    load_pth_path = "./BestCheckpoints/CE-vit_base_p16_conch.pth"
-    # load_pth_path = "./BestCheckpoints/LNM-vit_small_p16_pathology.pth"
-    # load_pth_path = "./BestCheckpoints/TD-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/TD-vit_base_p16_conch.pth"
-    # load_pth_path = "./BestCheckpoints/PI-vit_small_p16_pathology-reinhard.pth"
-    # load_pth_path = "./BestCheckpoints/PI-vit_base_p16_conch.pth"
-    
-    # inference setting
-    os.chdir(os.path.dirname(__file__) + "/../")
+def work(pth_path, pid_list):
     args = parse_arguments()
     args.batch_size = 1
     os.environ["CUDA_VISIBLE_DEVICES"]=gpu_id
@@ -84,10 +63,10 @@ if __name__ == '__main__':
     args.split_filename = "split_seed=2024.json"
     args.datainfo_file = "all_metadata.json"
     
-    basename = os.path.basename(load_pth_path)
+    basename = os.path.basename(pth_path)
     args.model = basename.split('-')[1].split('.')[0]
     task = basename.split('-')[0]
-    args.use_tasks = f"['{task}']"
+    args.use_tasks = f"['REC', 'LNM', 'TD', 'TI', 'CE', 'PI']"
     
     # fixed seed
     seed = 17
@@ -105,9 +84,9 @@ if __name__ == '__main__':
     
     # running setting
     model = GetModel(args).cuda()
-    assert load_pth_path is not None, "load_path can't be None."
-    print(f"Load from {load_pth_path}!!!", flush=True)
-    cp = load_model(load_pth_path)
+    assert pth_path is not None, "load_path can't be None."
+    print(f"Load from {pth_path}!!!", flush=True)
+    cp = load_model(pth_path)
     
     flag = False
     for k, v in cp['model'].items():
@@ -125,9 +104,8 @@ if __name__ == '__main__':
         pretrain = {k: v for k, v in pretrain.items() if k in model.state_dict()}
         model.load_state_dict(pretrain)
     
-    model = TaskSpecificModel(task, model).cuda()
+    model = MultiTaskModel(model).cuda()
     
-
     # CAM Methods
     args.method = 'gradcam++'
     methods = \
@@ -140,7 +118,6 @@ if __name__ == '__main__':
          "eigengradcam": EigenGradCAM,
          "layercam": LayerCAM,
          "fullgrad": FullGrad}
-
 
 
     try:  # for vit_small_pathology, vit_base_imagenet
@@ -164,41 +141,53 @@ if __name__ == '__main__':
     os.makedirs(f'./Data/{Analysis_Name}_Results', exist_ok=True)
     # loader = train_loader
     loader = itertools.chain(val_loader, test_loader)
+    acc, err = 0, 0
     for x, y, ids in loader:
         
+        if pid_list is not None and int(ids[0].item()) not in pid_list:
+            continue
+        
+        label = []
         x = x.cuda()
         for k, v in y.items():
             y[k] = v.cuda()
+            label.append(v.item())
+        out_y = y
+        label = tuple(label)
         
-        label = y[task].item()
-        t: torch.Tensor = torch.tensor([label]).cuda()
-    
-        if label == 0:
-            continue
         
-        if labels_counter[label] >= 40:
-            print(f"Skip {ids} due to enough {label} samples.", flush=True)
-            continue
+        model.eval()
+        with torch.no_grad():
+            output = model(x)[0]
+            pred = []
+            for k, v in output.items():
+                temp = nn.Softmax(dim=1)(v)
+                temp = temp.cpu().data.numpy()
+                v = temp.argmax(axis=1)[0]
+                pred.append(v)
+            pred = tuple(pred)
+            
+        if pred != label:
+            err += 1
+            print(f"Error: {ids[0].item()} pred: {pred} label: {label}")
+        else:
+            acc += 1
+            print(f"Correct: {ids[0].item()} pred: {pred} label: {label}")
         
-        probs = torch.softmax(model(x), dim=1)
-        confidence = torch.max(probs, dim=1).values.item()
-        if confidence < 0.6:
-            print(f"Skip {ids} due to low confidence.", flush=True)
+        if labels_counter[label] > 3:
+            print(f"Skip: {ids[0].item()} pred: {pred} label: {label} Due to enough samples.")
             continue
-        if torch.argmax(probs, dim=1) != label:
-            print(f"Skip {ids} due to wrong prediction.", flush=True)
-            continue
-        # labels_counter[label] += 1
-
+        labels_counter[label] += 1
+        
         ids = ids.cpu().data.numpy() 
-        loss_function = [lambda x: nn.CrossEntropyLoss()(x.reshape(1, -1), t)]
+        loss_function = [lambda x: model.loss(x, out_y)]
         cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=reshape_transform)
         scale_cam = cam(input_tensor=x, targets=loss_function, eigen_smooth=True)
         
         # visualization
         for i, pid in enumerate(ids):
             print(f"Processing {pid} ...", flush=True)
-            os.makedirs(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}', exist_ok=True)
+            os.makedirs(f'./Data/{Analysis_Name}_Results/label={label}_{pid}', exist_ok=True)
             
             pid_dir = glob.glob(f"{origin_images_path}/*{pid}*")
             image_names = ['01_2X', "01_4X", "01_10X", "02_2X", "02_4X", "02_10X"]
@@ -207,19 +196,33 @@ if __name__ == '__main__':
                 image = cv2.imread(f"{pid_dir[0]}/{name}.jpg")
                 rgb_img_uint8 = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 rgb_img = np.float32(rgb_img_uint8) / 255
+                
                 grayscale_cam = scale_cam[i * 6 + j, :]
-                # print(grayscale_cam.shape, rgb_img.shape, flush=True)
                 grayscale_cam = cv2.resize(grayscale_cam, (rgb_img.shape[1], rgb_img.shape[0]))
-                # print("After : ", grayscale_cam.shape, flush=True)
+
                 cam_image = show_cam_on_image(rgb_img, grayscale_cam)
-                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}/{j}th_score.jpg', cam_image)
-                # grayscale_cam_uint8 = np.uint8(grayscale_cam * 255)
-                # grayscale_cam_uint8 = cv2.applyColorMap(grayscale_cam_uint8, cv2.COLORMAP_JET)
-                # cv2.imwrite(f'./Data/{Analysis_Name}_Results/{pid}/{args.method}_cam_{pid}_{j}th_label={y[task][i].item()}_heatmap.jpg', grayscale_cam_uint8)
-                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}_confi={confidence}/{j}th_rgb.jpg', rgb_img_uint8)
-                # exit(0)
+                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}/{j}th_score.jpg', cam_image)
+                cv2.imwrite(f'./Data/{Analysis_Name}_Results/label={label}_{pid}/{j}th_rgb.jpg', rgb_img_uint8)
             
         # del torch tensor
-        del x, y, ids, scale_cam, t, probs, cam, loss_function
+        del x, y, ids, scale_cam, cam, loss_function
         torch.cuda.empty_cache()
         
+    print(f"Accuracy: {acc / (acc + err)}")  # 0.155
+
+
+if __name__ == '__main__':
+    import os
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+    gpu_id = "1"
+
+    origin_images_path = "/home/Guanjq/HuangData/Multi-OSCCPI-Dataset/"
+    pid_list = None
+    pth_path = "./BestCheckpoints/Multitask-vit_small_p16_pathology-reinhard.pth"
+   
+    # inference setting
+    os.chdir(os.path.dirname(__file__) + "/../")
+    
+    work(pth_path, pid_list)
+    
+    

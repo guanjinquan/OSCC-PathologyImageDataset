@@ -81,3 +81,4 @@ kornia==0.7.3
 opencv_python==4.10.0.84
 opencv_python_headless==4.10.0.84
 grad-cam==1.5.4
+scikit-image==0.24.0

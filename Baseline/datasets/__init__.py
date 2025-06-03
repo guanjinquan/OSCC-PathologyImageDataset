@@ -8,10 +8,16 @@ from datasets.data_sampler import BalancedBatchSampler, DistributedBalancedBatch
 
 def GetDataLoader(fold, mean_std=None, args=None, test_mode=False):
     args = parse_arguments() if args is None else args
+    if args.input_feats:
+        return GetTVTFeatureLoader(mean_std, args, test_mode)
     if args.train_mode == "TVT":
         return GetTVTDataLoader(mean_std, args, test_mode)
     else:
         return GetCVDataLoader(fold, mean_std, args, test_mode)
+
+
+def GetTVTFeatureLoader(mean_std=None, args=None, test_mode=False):
+    pass
 
 
 def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):

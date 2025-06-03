@@ -49,10 +49,15 @@ def vit_small(args, pretrained, progress, key):
 class VitPathology(nn.Module):
     def __init__(self, args):
         super(VitPathology, self).__init__()
+        self.freezed = args.freezed_backbone
         self.extractor = vit_small(args, pretrained=True, progress=True, key="DINO_p16")
         
     def forward(self, x):
-        x = self.extractor(x)
+        if self.freezed:
+            with torch.no_grad():
+                x = self.extractor(x)
+        else:
+            x = self.extractor(x)
         return x
 
 
@@ -62,6 +67,11 @@ def get_vit_base_pathology(args):
 
 if __name__ == "__main__":
     class Args:
-        img_size = 512
-    model = get_vit_base_pathology(Args())[0]
+        # img_size = 512
+        img_size = (1944, 2592)
+        freezed_bakcbone = True
+    model = get_vit_base_pathology(Args())[0].cuda(2)
     print("Params : ", sum([param.nelement() for param in model.parameters()]) / (1024 * 1024) * 4, "MB")
+    input = torch.randn(1, 3, 1944, 2592).cuda(2)
+    output = model(input)
+    print("Output shape: ", output.shape)

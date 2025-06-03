@@ -2,6 +2,30 @@ from models.backbones import *
 from models.tasks import MultiTaskModel
 from models.fusion_blocks import *
 
+
+def get_backbone_and_embed_dim(args):
+    if args.model == 'resnet50_imagenet':
+        return get_resnet_imagenet(args, 50)
+    elif args.model == 'densenet121_imagenet':
+        return get_densenet121_imagenet(args)
+    elif args.model == 'vit_small_p16_pathology':
+        return get_vit_base_pathology(args)
+    elif args.model == 'swin_imagenet':
+        return get_swin_imageNet(args)
+    elif args.model == 'vit_base_p16_medcoss':
+        return get_vit_base_medcoss(args)
+    elif args.model == 'vit_base_p14_hibou' or args.model == 'vit_base_p16_hibou':
+        return get_vit_base_hibou(args)
+    elif args.model == 'vit_base_p16_uni':
+        return get_vit_base_uni(args)
+    elif args.model == 'vit_base_p16_conch':
+        return get_vit_base_conch(args)
+    elif args.model == 'vit_base_imagenet':
+        return get_vit_base_imagenet(args)
+    else:
+        raise ValueError("model not supported")
+    
+
 def GetModel(args):
 
     if args.model == 'resnet50_imagenet':

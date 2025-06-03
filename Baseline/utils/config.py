@@ -15,7 +15,7 @@ def parse_arguments():
     parser.add_argument('--datainfo_file', type=str, default="pathology_info.json") 
     parser.add_argument('--split_filename', type=str, default="split_seed=2024.json")
     parser.add_argument('--data_type', type=str, default="ALL")
-    parser.add_argument('--img_size', type=int, default=512)
+    parser.add_argument('--img_size', type=str, default="512", help="image size, e.g. 512,512 or 1944,2592")
     parser.add_argument('--crop_scale', type=float, default=0.8)
     parser.add_argument('--stain_prob', type=float, default=0.5)
     parser.add_argument("--debug_mode", type=bool, default=False)
@@ -25,6 +25,8 @@ def parse_arguments():
     
     # models settings 
     parser.add_argument('--model', type=str)
+    parser.add_argument('--freezed_backbone', action="store_true", help='whether to freeze the backbone, default unfreeze')
+    parser.add_argument('--input_feats', action="store_true", help='whether to freeze the backbone, default unfreeze')
     parser.add_argument('--fusion_block', type=str, default='concat', help="fusion_block: [concat, LMF, gated, transformer_encoder]")
     parser.add_argument('--use_tasks', type=str, default="['tumor_diff', 'cancer_embolus', 'invasion', 'tumor_N', 'recurrence']", help="use task, e.g. ['tumor_diff', 'cancer_embolus', 'invasion', 'tumor_N', 'recurrence']")
 
@@ -51,4 +53,14 @@ def parse_arguments():
     
     
     args = parser.parse_args()
+
+    if args.img_size == "512":
+        args.img_size = (512, 512)
+    elif args.img_size == "512,512":
+        args.img_size = (512, 512)
+    elif args.img_size == "1944,2592":
+        args.img_size = (1944, 2592)
+    else:
+        args.img_size = tuple(map(int, args.img_size.split(',')))
+
     return args

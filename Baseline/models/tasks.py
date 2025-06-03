@@ -37,6 +37,7 @@ class MultiTaskModel(nn.Module):
         
         self.backbone = backbone
         self.fusion_block = fusion_block
+        self.args = args
             
         # support tasks
         self.support_tasks = \
@@ -88,11 +89,20 @@ class MultiTaskModel(nn.Module):
         return metrics
     
     def forward(self, *args, **kargs):
-        x = self.backbone(*args, **kargs)
+        if self.args.input_feats:
+            # Batch * 6, DIM
+            x = args[0].to(self.fusion_block.device)  # args[0] is the input features
+        else:
+            if self.args.freezed_backbone:
+                with torch.no_grad():
+                    x = self.backbone(*args, **kargs)
+            else:
+                x = self.backbone(*args, **kargs)
         x = self.fusion_block(x)
         outs = {}
         for task_name, task in self.tasks.items():
             outs[task_name] = task(x)
+        
         return outs
 
 

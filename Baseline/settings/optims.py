@@ -13,6 +13,12 @@ import torch
 
 
 def GetOptimizer(args, model):
+    if args.optimizer == "AdamW" and args.freezed_backbone:
+        print("Using AdamW optimizer with freezed backbone")
+        return AdamW([
+            {'params': model.get_others_params(), 'lr': args.learning_rate, 'weight_decay': args.weight_decay},
+        ])
+    
     if args.optimizer == 'Adam':
         return Adam([
             {'params': model.get_backbone_params(), 'lr': args.backbone_lr, 'weight_decay': args.weight_decay},

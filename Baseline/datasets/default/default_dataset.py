@@ -83,8 +83,11 @@ class MyBaseDataset(Dataset):
             
         TARGET_NUM = 3 if self.data_type in ["EDGE", "CORE"] else 6
         assert image.shape[0] == TARGET_NUM, f"error = {self.items[index]['pid']}"
-        assert image.shape[1] == 3 and image.shape[2] == self.args.img_size and image.shape[3] == self.args.img_size, f"Invalid Shape : {image.shape} but config's img_size = {self.args.img_size}."
-        
+        if isinstance(self.args.img_size, int):
+            assert image.shape[1] == 3 and image.shape[2] == self.args.img_size and image.shape[3] == self.args.img_size, f"Invalid Shape : {image.shape} but config's img_size = {self.args.img_size}."
+        else:
+            assert image.shape[1] == 3 and image.shape[2] == self.args.img_size[0] and image.shape[3] == self.args.img_size[1], f"Invalid Shape : {image.shape} but config's img_size = {self.args.img_size}."
+
         return [image, labels, self.items[index]['pid']]  # image, labels, patient_id
     
     def __len__(self):
