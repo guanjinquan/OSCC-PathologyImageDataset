@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def collate_fn_ensemble(input):  
     data = None
@@ -9,6 +10,10 @@ def collate_fn_ensemble(input):
     for x, y, i in input:  # new是新在没有0填充
         for k, v in y.items():
             target[k] = target.get(k, []) + (v if type(v) is list else [v])
+        if isinstance(x, list):
+            x = torch.stack(x, dim=0)
+        elif isinstance(x, np.ndarray):
+            x = torch.from_numpy(x).float()
         data = torch.cat((data, x), dim=0) if data != None else x
         idxs.append(i)  # 需要获取病人id
         

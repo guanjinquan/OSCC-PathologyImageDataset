@@ -1,4 +1,4 @@
-name: Multi-OSCCPI
+name: Multi-OSCC
 channels:
   - defaults
   - conda-forge

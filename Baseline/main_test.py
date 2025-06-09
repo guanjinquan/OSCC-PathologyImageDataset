@@ -34,13 +34,6 @@ def bootstrap_auc(labels, probs, num_classes, bootstraps = 500):
     np.random.set_state(state)
     return statistics
 
-def roc_auc_confidence_interval(statistics, alpha = 0.95):
-    lower = (1 - alpha) / 2
-    upper = alpha + lower
-    lower_bound = np.quantile(statistics, lower, axis = 0)
-    upper_bound = np.quantile(statistics, upper, axis = 0)
-    return lower_bound, upper_bound
-
 
 def bootstrap_CI(func_method, labels, preds, num_classes, bootstraps = 500):
     state = np.random.get_state()
@@ -76,6 +69,15 @@ def confidence_interval(statistics, alpha = 0.95):
     lower_bound = np.quantile(statistics, lower, axis = 0)
     upper_bound = np.quantile(statistics, upper, axis = 0)
     return lower_bound, upper_bound
+
+
+def Box_Plot(statistics):
+    lowest = np.min(statistics, axis=0)
+    highest = np.max(statistics, axis=0)
+    Q2 = np.quantile(statistics, 0.5, axis=0)
+    Q1 = np.quantile(statistics, 0.25, axis=0)
+    Q3 = np.quantile(statistics, 0.75, axis=0)
+    return lowest, Q1, Q2, Q3, highest
 
 
 class Tester:
@@ -180,8 +182,12 @@ class Tester:
                         if m == "AUC":
                             statistics = bootstrap_auc(labels, probs, num_classes)
                             metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(np.round(np.mean([
-                                roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
+                                confidence_interval(statistics[i]) for i in range(num_classes)
                             ], axis=0), 4)))
+                            metrics_dict[f"BOX_{m}_{k}_{mode}"] = tuple(list(np.round(np.mean([
+                                Box_Plot(statistics[i]) for i in range(num_classes)
+                            ], axis=0), 4)))
+
                         else:
                             statistics = bootstrap_CI(func_methods[m], labels, preds, num_classes)
                             metrics_dict[f"95CI_{m}_{k}_{mode}"] = tuple(list(
@@ -190,12 +196,7 @@ class Tester:
                             
                 print(self.model.tasks[k].metrics(torch.tensor(outs[k]), true[k]))
                     
-                # statistics = bootstrap_auc(labels, probs, num_classes)
-                # metrics_dict[f"95AUC_CI_{k}_{mode}"] = tuple(list(np.round(np.mean([
-                #     roc_auc_confidence_interval(statistics[i]) for i in range(num_classes)
-                # ], axis=0), 4)))
-                # metrics_dict[f"log_{k}_{mode}"] = f"\\makecell{{{round(100*metrics_dict[temp_key0], 2)} \\ {(round(100*metrics_dict[temp_key1][0], 2), round(100*metrics_dict[temp_key1][1], 2))}}}"
-                
+
             print(f"{mode} : {loss_dict}")
             print(f'metrics : ' + str(metrics_dict))
             return {"pids": pids, "outs": outs, "true": true}

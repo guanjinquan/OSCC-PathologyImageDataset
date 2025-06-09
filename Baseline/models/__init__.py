@@ -50,8 +50,16 @@ def GetModel(args):
         backbone, embed_dim = get_vit_small_imagenet(args)
     else:
         raise ValueError("model not supported")
+
+    if args.input_feats:
+        del backbone
+        backbone = None
+
+    if args.num_feat != -1 and args.input_feats:
+        num_feat = int(args.num_feat)
+    else:
+        num_feat = 6 if args.data_type == 'ALL' else 3
     
-    num_feat = 6 if args.data_type == 'ALL' else 3
     hidden_dim = 768
     if args.fusion_block == 'concat':
         fusion_block = ConcatBlock(num_feat, embed_dim, hidden_dim)

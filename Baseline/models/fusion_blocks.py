@@ -20,10 +20,12 @@ class ConcatBlock(nn.Module):
         print("Params : ", sum(p.numel() for p in self.parameters()) / (1024 * 1024) * 4, " MB")
 
     def forward(self, x):
+        # print("INPUT Shape = ", x.shape)
         # x.shape = (batch_size * num_feat, in_dim)
         assert x.shape[1] == self.in_dim, f"x.shape[1]: {x.shape[1]}, self.in_dim: {self.in_dim}"
         assert x.shape[0] % self.num_feat == 0, f"x.shape[0]: {x.shape[0]}, self.num_feat: {self.num_feat}"
         x = torch.reshape(x, (-1, self.in_dim * self.num_feat))
+        # print("FUSE Shape = ", x.shape)
         return self.neck(x)
     
     

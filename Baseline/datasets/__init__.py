@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from datasets.default import *
 from datasets.stain import *
 from datasets.data_sampler import BalancedBatchSampler, DistributedBalancedBatchSampler
-
+from datasets.data_features import MyFeatDataset 
 
 def GetDataLoader(fold, mean_std=None, args=None, test_mode=False):
     args = parse_arguments() if args is None else args
@@ -17,7 +17,18 @@ def GetDataLoader(fold, mean_std=None, args=None, test_mode=False):
 
 
 def GetTVTFeatureLoader(mean_std=None, args=None, test_mode=False):
-    pass
+    train_set = MyFeatDataset(0, "train", args.data_type, mean_std, test_mode, args)
+    valid_set = MyFeatDataset(0, "valid", args.data_type, mean_std, True, args)
+    test_set = MyFeatDataset(0, "test", args.data_type, mean_std, True, args)
+
+    train_loader = DataLoader(train_set, batch_size=args.batch_size,
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
+    valid_loader = DataLoader(valid_set, batch_size=args.batch_size,
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
+    test_loader = DataLoader(test_set, batch_size=args.batch_size,
+        num_workers=4, pin_memory=True, collate_fn=collate_fn_ensemble)
+    
+    return train_loader, valid_loader, test_loader
 
 
 def GetTVTDataLoader(mean_std=None, args=None, test_mode=False):

@@ -1,0 +1,7 @@
+python ./Baseline/main_test.py \
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsCE/train_runs_vit_pathobench.sh
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsLNM/train_runs_vit_pathobench.sh
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsPI/train_runs_vit_pathobench.sh
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsREC/train_runs_vit_pathobench.sh
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsTD/train_runs_vit_pathobench.sh
+bash /home/Guanjq/Work/OSCC-PathologyImageDataset/Baseline/TrainScripts/ScripsFreezedNorm/OriginalSize/ScriptsTI/train_runs_vit_pathobench.sh

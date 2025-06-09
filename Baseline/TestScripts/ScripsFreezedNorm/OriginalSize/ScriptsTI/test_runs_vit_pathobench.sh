@@ -1,0 +1,17 @@
+python ./Baseline/main_test.py \
+    --runs_id "Freezed_Norm_TI_OriSize_vit_small_p16_pathology" \
+    --gpu_id "0" \
+    --seed 109 \
+    --weight_decay 6e-5 \
+    --learning_rate 1e-6 \
+    --backbone_lr 5e-7 \
+    --acc_step 1 \
+    --batch_size 16 \
+    --split_filename "split_seed=2024.json" \
+    --datainfo_file "all_metadata_origin_size_feat_norm.json" \
+    --freezed_backbone \
+    --input_feats \
+    --img_size "1944,2592" \
+    --num_epochs 200 \
+    --model "vit_small_p16_pathology" \
+    --use_tasks "['TI']"

@@ -25,6 +25,7 @@ def parse_arguments():
     
     # models settings 
     parser.add_argument('--model', type=str)
+    parser.add_argument('--num_feat', type=int, default=-1, help='number of features, -1 means use all features')
     parser.add_argument('--freezed_backbone', action="store_true", help='whether to freeze the backbone, default unfreeze')
     parser.add_argument('--input_feats', action="store_true", help='whether to freeze the backbone, default unfreeze')
     parser.add_argument('--fusion_block', type=str, default='concat', help="fusion_block: [concat, LMF, gated, transformer_encoder]")

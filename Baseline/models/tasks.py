@@ -57,12 +57,17 @@ class MultiTaskModel(nn.Module):
             if task_name not in use_tasks:
                 tasks.pop(task_name)
         self.tasks = nn.ModuleDict(tasks)
-        
-        print("Backbone Params Size:", sum(p.numel() for p in self.backbone.parameters()) / 1024 / 1024 * 4, "MB", flush=True)
+
+        if self.backbone is not None:
+            print("Backbone Params Size:", sum(p.numel() for p in self.backbone.parameters()) / 1024 / 1024 * 4, "MB", flush=True)
+        else:   
+            print("Backbone is None.", flush=True)
         print("Fusion Block Params Size:", sum(p.numel() for p in self.fusion_block.parameters()) / 1024 / 1024 * 4, "MB", flush=True)
         print("Total Params Size:", sum(p.numel() for p in self.parameters()) / 1024 / 1024 * 4, "MB", flush=True)
     
     def get_backbone_params(self):
+        if self.backbone is None:
+            return []
         return self.backbone.parameters()
     
     def get_others_params(self):
@@ -91,7 +96,8 @@ class MultiTaskModel(nn.Module):
     def forward(self, *args, **kargs):
         if self.args.input_feats:
             # Batch * 6, DIM
-            x = args[0].to(self.fusion_block.device)  # args[0] is the input features
+            device = next(self.fusion_block.parameters()).device
+            x = args[0].to(device)  # args[0] is the input features
         else:
             if self.args.freezed_backbone:
                 with torch.no_grad():
