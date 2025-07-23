@@ -60,5 +60,12 @@ pip install -r requirements.txt
 ## Cite this work
 If you use this dataset, please cite the following paper:
 ```
-This will be set when the paper is published.
+@misc{guan2025high,
+    title={A High Magnifications Histopathology Image Dataset for Oral Squamous Cell Carcinoma Diagnosis and Prognosis},
+    author={Jinquan Guan and Junhong Guo and Qi Chen and Jian Chen and Yongkang Cai and Yilin He and Zhiquan Huang and Yan Wang and Yutong Xie},
+    year={2025},
+    eprint={2507.16360},
+    archivePrefix={arXiv},
+    primaryClass={eess.IV}
+}
 ```
