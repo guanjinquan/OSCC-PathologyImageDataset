@@ -11,6 +11,8 @@ import os
 import json
 
 
+# 这个函数本身并不直接输出 95 % 置信区间，它只返回了每个类别下 bootstraps 次重复抽样得到的 AUC 值分布 statistics[c]。
+# 需要调用confidence_interval进一步获取
 def bootstrap_auc(labels, probs, num_classes, bootstraps = 500):
     state = np.random.get_state()
     np.random.seed(2024)  # for reproducibility

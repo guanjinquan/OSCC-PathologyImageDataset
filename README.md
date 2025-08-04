@@ -3,7 +3,7 @@
 ## (1) Multi-OSCC Datasets 
 
 ### 1-1 Dataset Download
-Baidu Web Disk: https://pan.baidu.com/s/16-_BD_lvCWlovOJBZwDnpg?pwd=oscc (extract code: oscc)
+Send us the email to request the data.
 
 
 ### 1-2 Dataset splitation
