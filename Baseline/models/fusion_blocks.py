@@ -86,6 +86,7 @@ class LowRankFusionBlock(nn.Module):
 
 # gated-fusion block
 # ref: https://github.com/jacquelinelala/GFN/blob/master/networks/GFN_4x.py
+# Or another paper: Gated multimodal units for information fusion. https://arxiv.org/pdf/1702.01992
 class GatedFusionBLock(nn.Module):
     def __init__(self, num_feat, in_dim, out_dim) -> None:
         super(GatedFusionBLock, self).__init__()
