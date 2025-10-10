@@ -16,6 +16,7 @@ Baseline/models/backbones/pretrained_weight
 Misc/prestain_log.txt
 .vscode
 Data/*Results*
+Data/*backup*
 Data/*GradCAM_Results*
 BestCheckpoints
 ReleaseCheckpoints
