@@ -23,7 +23,7 @@ class Config:
     # 文件路径 (请确保这些路径在你本地是正确的)
     METADATA_PATH = '/home/Guanjq/Work/OSCC-PathologyImageDataset/Data/all_metadata.json'
     SPLIT_PATH = '/home/Guanjq/Work/OSCC-PathologyImageDataset/Data/split_seed=2024.json'
-    CLINICAL_PATH = '/home/Guanjq/Work/OSCC-PathologyImageDataset/Clinical/clinical_data_2024.xlsx'
+    CLINICAL_PATH = '/home/Guanjq/Work/OSCC-PathologyImageDataset/Clinical/clinical_data_2024.csv'
     
     # 模型设置
     BERT_MODEL_NAME = "emilyalsentzer/Bio_ClinicalBERT" 
