@@ -21,6 +21,7 @@ Data/*GradCAM_Results*
 BestCheckpoints
 ReleaseCheckpoints
 unrelease
+Baseline/oldmodels
 
 # C extensions
 *.so
