@@ -1,0 +1,18 @@
+python ./Baseline/main_train_grad_norm.py \
+    --runs_id "011_gradnorm_with_reinhard_TIandPI_continue7" \
+    --gpu_id "0" \
+    --seed 109 \
+    --weight_decay 6e-5 \
+    --learning_rate 1e-6 \
+    --backbone_lr 5e-7 \
+    --acc_step 16 \
+    --batch_size 1 \
+    --split_filename "split_seed=2024.json" \
+    --datainfo_file "all_metadata.json" \
+    --img_size 512 \
+    --num_epochs 200 \
+    --model "vit_small_p16_pathology" \
+    --augment_method 'reinhard' \
+    --use_tasks "['TI', 'PI']" \
+    --finetune \
+    --load_pth_path "./Checkpoints/vit_small_p16_pathology/007_gradnorm_with_reinhard_TIandPI/valid_MultiTask_Best.pth"
