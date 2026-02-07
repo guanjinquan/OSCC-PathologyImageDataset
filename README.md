@@ -5,7 +5,7 @@
 ### 1-1 Dataset Download
 
 - Down load the data from zenodo: https://zenodo.org/records/16842637
-- Down load the data from Baidu NetDisk (with password oscc): https://pan.baidu.com/s/1wQA9peK_yWpAC2sALep8nQ?pwd=oscc 
+- Down load the data from Baidu NetDisk (with password oscc): https://pan.baidu.com/s/1m27QaBIC4HxdBUBrIMbbNg?pwd=oscc
 
 ### 1-2 Dataset splitation
 Following the random seed 42, we split the dataset into training, validation, and test sets with a ratio of 70:15:15.
