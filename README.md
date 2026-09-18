@@ -8,7 +8,7 @@
 - Down load the data from Baidu NetDisk (with password oscc): https://pan.baidu.com/s/1m27QaBIC4HxdBUBrIMbbNg?pwd=oscc
 
 ### 1-2 Dataset splitation
-Following the random seed 42, we split the dataset into training, validation, and test sets with a ratio of 70:15:15.
+Following the random seed 2024, we split the dataset into training, validation, and test sets with a ratio of 70:15:15.
 In `json` file: `./Data/split_seed=2024.json`
 
 ### 1-3 Images labels
